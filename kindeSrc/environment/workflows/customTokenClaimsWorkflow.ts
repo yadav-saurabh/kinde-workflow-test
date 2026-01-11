@@ -41,11 +41,11 @@ export default async function (event: onUserTokenGeneratedEvent) {
   try {
     // Get API configuration from environment variables
     const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
-    const apiKey = getEnvironmentVariable("MOXII_API_KEY").value;
+    const apiKey = getEnvironmentVariable("MOXII_KIND_WORKFLOW_API_KEY").value;
 
     if (!apiBaseUrl || !apiKey) {
       console.error(
-        "[Moxii] Missing API configuration. Please set MOXII_API_BASE_URL and MOXII_API_KEY in Kinde environment variables",
+        "[Moxii] Missing API configuration. Please set MOXII_API_BASE_URL and MOXII_KIND_WORKFLOW_API_KEY in Kinde environment variables",
       );
 
       // Set default claims on error
