@@ -12,7 +12,6 @@ export const workflowSettings: WorkflowSettings = {
   name: "Custom Token Claims - Add Roles and Permissions",
   trigger: WorkflowTrigger.UserTokenGeneration,
   bindings: {
-    console: {},
     "kinde.fetch": {},
     "kinde.env": {},
     "kinde.accessToken": {},

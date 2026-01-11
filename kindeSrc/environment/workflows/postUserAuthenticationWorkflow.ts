@@ -11,7 +11,6 @@ export const workflowSettings: WorkflowSettings = {
   name: "Post User Authentication - Create User in Moxii DB",
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
-    console: {},
     "kinde.fetch": {},
     "kinde.env": {},
   },
@@ -23,12 +22,16 @@ export const workflowSettings: WorkflowSettings = {
  * It creates the user in your local Moxii database
  */
 export default async function (event: onPostAuthenticationEvent) {
-  const { context } = event;
-  const userId = context.user.id;
+  const userId = event.context.user.id;
+  const isNewKindeUser = event.context.auth.isNewUserRecordCreated;
 
   console.log(
     `[Moxii] Post-authentication workflow triggered for user: ${userId}`,
   );
+
+  if (!isNewKindeUser) {
+    return;
+  }
 
   try {
     // Get API configuration from environment variables
@@ -45,7 +48,8 @@ export default async function (event: onPostAuthenticationEvent) {
     // Prepare user data payload
     const payload = {
       kindeUserId: userId,
-      isNewUser: context.auth.isNewUserRecordCreated,
+      isNewUser: event.context.auth.isNewUserRecordCreated,
+      orgCode: event.request.authUrlParams.orgCode
     };
 
     console.log(`[Moxii] Creating user in database:`, payload);
