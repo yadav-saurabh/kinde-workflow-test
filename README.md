@@ -26,7 +26,7 @@ Go to your Kinde dashboard:
 
 ```
 MOXII_API_BASE_URL=https://api.moxii.com/api
-MOXII_KIND_WORKFLOW_API_KEY=your_moxii_api_key_here
+MOXII_KINDE_WORKFLOW_API_KEY=your_moxii_api_key_here
 ```
 
 ### 3. Connect Repository to Kinde
@@ -117,7 +117,7 @@ Your Moxii API server must implement these endpoints:
 POST /users
 Headers:
   Content-Type: application/json
-  x-api-key: {MOXII_KIND_WORKFLOW_API_KEY}
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
 
 Body (from form data field "data"):
 {
@@ -138,7 +138,7 @@ Response (200/201):
 GET /users/{kindeUserId}/claims
 Headers:
   Content-Type: application/json
-  x-api-key: {MOXII_KIND_WORKFLOW_API_KEY}
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
 
 Response (200):
 {
@@ -177,7 +177,7 @@ To monitor your workflows:
 ### User not created in database
 
 - Check Kinde workflow logs for errors
-- Verify `MOXII_API_BASE_URL` and `MOXII_KIND_WORKFLOW_API_KEY` are set correctly in Kinde environment variables
+- Verify `MOXII_API_BASE_URL` and `MOXII_KINDE_WORKFLOW_API_KEY` are set correctly in Kinde environment variables
 - Ensure your API endpoint `/users` is accessible and accepts POST requests
 - Check your API server logs for errors
 - Verify the `x-api-key` header is being validated correctly
@@ -195,8 +195,8 @@ To monitor your workflows:
 If you see "Missing API configuration" in logs:
 
 - Verify environment variables are set in Kinde dashboard under **Settings > Environment > Environment variables**
-- Ensure variable names match exactly: `MOXII_API_BASE_URL` and `MOXII_KIND_WORKFLOW_API_KEY`
-- Mark the `MOXII_KIND_WORKFLOW_API_KEY` as a secret in Kinde dashboard
+- Ensure variable names match exactly: `MOXII_API_BASE_URL` and `MOXII_KINDE_WORKFLOW_API_KEY`
+- Mark the `MOXII_KINDE_WORKFLOW_API_KEY` as a secret in Kinde dashboard
 - Redeploy workflows after adding environment variables
 
 ### Workflow files not appearing in Kinde
