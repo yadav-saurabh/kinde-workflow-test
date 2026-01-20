@@ -16,12 +16,16 @@
   "author": "Moxii",
   "license": "MIT",
   "devDependencies": {
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
     "eslint": "^9.25.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@kinde/infrastructure": "0.9.0"
+    "@kinde/infrastructure": "^0.9.0"
   }
 }

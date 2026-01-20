@@ -1,3 +1,20 @@
+/**
+ * Kinde Token Generation Workflow
+ *
+ * This workflow runs during JWT token generation to add custom Moxii claims.
+ * It's called EVERY time a token is generated (login, refresh, etc.).
+ *
+ * Flow:
+ * 1. Kinde is generating a JWT token
+ * 2. This workflow runs → Calls /auth/claims endpoint
+ * 3. Entity/Customer service returns Moxii claims
+ * 4. Claims are embedded in the JWT token
+ * 5. User receives JWT with custom Moxii claims
+ *
+ * IMPORTANT: The user must already exist in the Moxii database
+ * (created by post-authentication.ts workflow on first login)
+ */
+
 import {
   WorkflowSettings,
   WorkflowTrigger,
@@ -5,107 +22,193 @@ import {
   getEnvironmentVariable,
   fetch,
   accessTokenCustomClaims,
+  idTokenCustomClaims,
 } from "@kinde/infrastructure";
 
 export const workflowSettings: WorkflowSettings = {
-  id: "customTokenClaims",
-  name: "Custom Token Claims - Add Roles and Permissions",
+  id: "tokenGeneration",
+  name: "Token Generation - Add Moxii Claims to JWT",
   trigger: WorkflowTrigger.UserTokenGeneration,
   bindings: {
     "kinde.fetch": {},
     "kinde.env": {},
     "kinde.accessToken": {},
+    "kinde.idToken": {},
+    url: {},
   },
 };
 
 /**
- * Custom Token Claims Workflow
- * This workflow runs when Kinde generates JWT tokens
- * It fetches user roles and permissions from your Moxii API and adds them to the token
+ * Main workflow function
  */
 export default async function (event: onUserTokenGeneratedEvent) {
-  const { context } = event;
-  const userId = context.user.id;
+  const userId = event.context.user.id;
 
-  console.log(`[Moxii] Generating custom token claims for user: ${userId}`);
+  // Get organization code if user is part of an org
+  const orgCode = event.context.organization?.code;
 
-  // Get access to the access token to set custom claims
-  const accessToken = accessTokenCustomClaims<{
-    roles: string[];
-    permissions: string[];
-    userId?: string;
-    organizationId?: string;
-    plan?: string;
-  }>();
+  // Get app name to determine which service to call
+  const appName = event.context.application?.clientId || "";
+
+  console.log(`[Moxii] Token generation workflow triggered:`, {
+    userId,
+    orgCode,
+    appName,
+  });
+
+  // Get API configuration
+  const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
+  const apiKey = getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
+
+  if (!apiBaseUrl || !apiKey) {
+    console.error(
+      "[Moxii] Missing API configuration. Cannot add Moxii claims to token.",
+    );
+    throw new Error("Missing API configuration - cannot generate token");
+  }
 
   try {
-    // Get API configuration from environment variables
-    const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
-    const apiKey = getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
+    // Determine user type and endpoint
+    const userType = determineUserType(appName);
 
-    if (!apiBaseUrl || !apiKey) {
-      console.error(
-        "[Moxii] Missing API configuration. Please set MOXII_API_BASE_URL and MOXII_KINDE_WORKFLOW_API_KEY in Kinde environment variables",
-      );
-
-      // Set default claims on error
-      accessToken.roles = ["user"];
-      accessToken.permissions = [];
-      return;
-    }
-
-    console.log(`[Moxii] Fetching roles and permissions for user: ${userId}`);
-
-    // Fetch user roles and permissions from your API
-    const claims = await fetch<{
-      roles: string[];
-      permissions: string[];
-      userId?: string;
-      organizationId?: string;
-      plan?: string;
-    }>(`${apiBaseUrl}/users/${userId}/claims`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-      },
-      responseFormat: "json",
-    });
-
-    console.log(`[Moxii] Retrieved claims for user:`, claims);
-
-    // Add custom claims to the token
-    if (claims.roles && Array.isArray(claims.roles)) {
-      accessToken.roles = claims.roles;
+    let claims;
+    if (userType === "STAFF") {
+      claims = await getStaffClaims(apiBaseUrl, apiKey, userId, orgCode);
+    } else if (userType === "CUSTOMER") {
+      claims = await getCustomerClaims(apiBaseUrl, apiKey, userId, orgCode);
     } else {
-      accessToken.roles = ["user"];
+      console.error(`[Moxii] Unknown user type for app: ${appName}`);
+      throw new Error(`Unknown user type for app: ${appName}`);
     }
 
-    if (claims.permissions && Array.isArray(claims.permissions)) {
-      accessToken.permissions = claims.permissions;
-    } else {
-      accessToken.permissions = [];
+    if (!claims) {
+      console.error(`[Moxii] No claims returned from API`);
+      throw new Error("Failed to retrieve user claims from backend");
     }
 
-    // Add any additional custom claims from your API response
-    if (claims.userId) {
-      accessToken.userId = claims.userId;
-    }
+    // Add Moxii claims to access token and ID token
+    const accessToken = accessTokenCustomClaims<typeof claims>();
+    const idToken = idTokenCustomClaims<typeof claims>();
 
-    if (claims.organizationId) {
-      accessToken.organizationId = claims.organizationId;
-    }
+    Object.assign(accessToken, claims);
+    Object.assign(idToken, claims);
 
-    if (claims.plan) {
-      accessToken.plan = claims.plan;
-    }
-
-    console.log(`[Moxii] Custom claims added to token successfully`);
+    console.log(`[Moxii] Claims added to token:`, claims);
   } catch (error) {
-    console.error("[Moxii] Error in custom token claims workflow:", error);
-
-    // Ensure at least basic claims are set
-    accessToken.roles = ["user"];
-    accessToken.permissions = [];
+    console.error("[Moxii] Error in token generation workflow:", error);
+    // Throw error to prevent token generation if claims cannot be retrieved
+    throw error;
   }
+}
+
+/**
+ * Determine user type from Kinde application name
+ */
+function determineUserType(appName: string): "STAFF" | "CUSTOMER" | "UNKNOWN" {
+  const lowerAppName = appName.toLowerCase();
+
+  if (
+    lowerAppName.includes("staff") ||
+    lowerAppName.includes("admin") ||
+    lowerAppName.includes("backoffice")
+  ) {
+    return "STAFF";
+  }
+
+  if (
+    lowerAppName.includes("customer") ||
+    lowerAppName.includes("client") ||
+    lowerAppName.includes("portal")
+  ) {
+    return "CUSTOMER";
+  }
+
+  return "UNKNOWN";
+}
+
+/**
+ * Get claims for staff users from entity-service
+ */
+async function getStaffClaims(
+  apiBaseUrl: string,
+  apiKey: string,
+  kindeUserId: string,
+  orgCode?: string,
+) {
+  console.log(`[Moxii] Getting STAFF claims:`, { kindeUserId, orgCode });
+
+  const payload = {
+    kindeUserId,
+    orgCode,
+  };
+
+  const response = await fetch<{
+    userId: string;
+    userType: string;
+    tenantId: string;
+    tenantCode: string;
+    roleCode: string;
+    roleName?: string;
+    roleId?: string;
+    permissions: string[];
+  }>(`${apiBaseUrl}/entities/auth/claims`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify(payload),
+    responseFormat: "json",
+  });
+
+  if (!response) {
+    console.error("[Moxii] Failed to get staff claims: No response");
+    throw new Error("Failed to retrieve staff claims from backend");
+  }
+
+  console.log(`[Moxii] Staff claims received:`, response);
+  return response;
+}
+
+/**
+ * Get claims for customer users from customer-service
+ */
+async function getCustomerClaims(
+  apiBaseUrl: string,
+  apiKey: string,
+  kindeUserId: string,
+  orgCode?: string,
+) {
+  console.log(`[Moxii] Getting CUSTOMER claims:`, { kindeUserId, orgCode });
+
+  const payload = {
+    kindeUserId,
+    orgCode,
+  };
+
+  const response = await fetch<{
+    userId: string;
+    userType: string;
+    tenantId: string;
+    tenantCode: string;
+    roleCode: string;
+    customerId: string;
+    permissions: string[];
+  }>(`${apiBaseUrl}/customers/customers/auth/claims`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify(payload),
+    responseFormat: "json",
+  });
+
+  if (!response) {
+    console.error("[Moxii] Failed to get customer claims: No response");
+    throw new Error("Failed to retrieve customer claims from backend");
+  }
+
+  console.log(`[Moxii] Customer claims received:`, response);
+  return response;
 }

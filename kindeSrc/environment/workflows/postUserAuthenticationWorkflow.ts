@@ -1,3 +1,19 @@
+/**
+ * Kinde Post-Authentication Workflow
+ *
+ * This workflow runs AFTER a user successfully authenticates with Kinde.
+ * It creates/updates the user in your Moxii database (Staff or Customer).
+ *
+ * IMPORTANT: This is separate from the token generation workflow.
+ * This creates the user record, while token-generation.ts adds claims to the JWT.
+ *
+ * Flow:
+ * 1. User logs in to Kinde
+ * 2. This workflow runs → Creates user in Moxii DB
+ * 3. Token generation workflow runs → Adds Moxii claims to JWT
+ * 4. User receives JWT with claims
+ */
+
 import {
   WorkflowSettings,
   WorkflowTrigger,
@@ -8,7 +24,7 @@ import {
 
 export const workflowSettings: WorkflowSettings = {
   id: "postUserAuthentication",
-  name: "Post User Authentication - Create User in Moxii DB",
+  name: "Post Authentication - Create/Update User in Moxii",
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
     "kinde.fetch": {},
@@ -17,61 +33,158 @@ export const workflowSettings: WorkflowSettings = {
 };
 
 /**
- * Post User Authentication Workflow
- * This workflow runs after a user successfully authenticates with Kinde
- * It creates the user in your local Moxii database
+ * Main workflow function
  */
 export default async function (event: onPostAuthenticationEvent) {
   const userId = event.context.user.id;
   const isNewKindeUser = event.context.auth.isNewUserRecordCreated;
 
-  console.log(
-    `[Moxii] Post-authentication workflow triggered for user: ${userId}`,
+  // Get organization code if user is part of an org
+  const orgCode = event.request.authUrlParams?.orgCode;
+
+  // Get app name to determine which service to call
+  const appName = event.context.application?.clientId || "";
+
+  console.log(`[Moxii] Post-auth workflow triggered:`, {
+    userId,
+    isNewKindeUser,
+    orgCode,
+    appName,
+    }
   );
 
+  // Skip if not a new user (we only create on first login)
   if (!isNewKindeUser) {
+    console.log(`[Moxii] Existing user, skipping creation`);
     return;
   }
 
-  try {
-    // Get API configuration from environment variables
-    const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
-    const apiKey = getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
+  // Get API configuration from Kinde environment variables
+  const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
+  const apiKey = getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
 
-    if (!apiBaseUrl || !apiKey) {
-      console.error(
-        "[Moxii] Missing API configuration. Please set MOXII_API_BASE_URL and MOXII_KINDE_WORKFLOW_API_KEY in Kinde environment variables",
-      );
-      return;
-    }
-
-    // Prepare user data payload
-    const payload = {
-      kindeUserId: userId,
-      isNewUser: event.context.auth.isNewUserRecordCreated,
-      orgCode: event.request.authUrlParams.orgCode
-    };
-
-    console.log(`[Moxii] Creating user in database:`, payload);
-
-    // Make API call to create user in your local database
-    const response = await fetch<{ success: boolean; user: any }>(
-      `${apiBaseUrl}/users`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-        body: new URLSearchParams({
-          data: JSON.stringify(payload),
-        }),
-        responseFormat: "json",
-      },
+  if (!apiBaseUrl || !apiKey) {
+    console.error(
+      "[Moxii] Missing API configuration. Set MOXII_API_BASE_URL and MOXII_KINDE_WORKFLOW_API_KEY in Kinde env vars"
     );
-
-    console.log(`[Moxii] User created successfully:`, response);
-  } catch (error) {
-    console.error("[Moxii] Error in post-authentication workflow:", error);
+    throw new Error("Missing API configuration - cannot create user");
   }
+
+  try {
+
+    // Determine user type based on app name
+    const userType = determineUserType(appName);
+
+    if (userType === "STAFF") {
+      await createStaffUser(
+        apiBaseUrl,
+        apiKey,
+        userId,
+        orgCode
+      );
+    } else if (userType === "CUSTOMER") {
+      await createCustomerUser(
+        apiBaseUrl,
+        apiKey,
+        userId,
+        orgCode
+      );
+    } else {
+      console.error(`[Moxii] Unknown user type for app: ${appName}`);
+      throw new Error(`Unknown user type for app: ${appName}`);
+    }
+  } catch (error) {
+    console.error("[Moxii] Error in post-auth workflow:", error);
+    // Throw error to prevent user creation in Kinde if backend fails
+    throw error;
+  }
+}
+
+/**
+ * Determine user type from Kinde application name
+ */
+function determineUserType(appName: string): "STAFF" | "CUSTOMER" | "UNKNOWN" {
+  const lowerAppName = appName.toLowerCase();
+
+  if (lowerAppName.includes("staff") || lowerAppName.includes("admin") || lowerAppName.includes("backoffice")) {
+    return "STAFF";
+  }
+
+  if (lowerAppName.includes("customer") || lowerAppName.includes("client") || lowerAppName.includes("portal")) {
+    return "CUSTOMER";
+  }
+
+  return "UNKNOWN";
+}
+
+/**
+ * Create staff user in entity-service
+ */
+async function createStaffUser(
+  apiBaseUrl: string,
+  apiKey: string,
+  kindeUserId: string,
+  orgCode?: string
+) {
+  console.log(`[Moxii] Creating STAFF user:`, { kindeUserId, orgCode });
+
+  const payload = {
+    kindeUserId,
+    orgCode,
+  };
+
+  const response = await fetch<{ error?: string }>(`${apiBaseUrl}/entities/staff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify(payload),
+    responseFormat: "json",
+  });
+
+  if (!response || response.error) {
+    console.error("[Moxii] Failed to create staff user:", response);
+    throw new Error("Failed to create staff user in backend");
+  }
+
+  console.log(`[Moxii] Staff user created:`, response);
+  return response;
+}
+
+/**
+ * Create customer user in customer-service
+ */
+async function createCustomerUser(
+  apiBaseUrl: string,
+  apiKey: string,
+  kindeUserId: string,
+  orgCode?: string
+) {
+  console.log(`[Moxii] Creating CUSTOMER user:`, { kindeUserId, orgCode });
+
+  const payload = {
+    kindeUserId,
+    orgCode,
+  };
+
+  const response = await fetch<{ error?: string }>(
+    `${apiBaseUrl}/customers/customers`,
+    {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify(payload),
+    responseFormat: "json",
+  });
+
+  if (!response || response.error) {
+    console.error("[Moxii] Failed to create customer user:", response);
+    throw new Error("Failed to create customer user in backend");
+  }
+
+  console.log(`[Moxii] Customer user created:`, response);
+  return response;
 }

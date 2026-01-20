@@ -1,11 +1,20 @@
 # Moxii Kinde Workflow
 
-This repository contains Kinde workflows for the Moxii platform to handle user authentication and JWT token customization.
+This repository contains Kinde workflows and custom authentication pages for the Moxii platform.
 
 ## Features
 
+### Workflows
+
 - **Post User Authentication**: Automatically creates users in your Moxii database when they sign up via Kinde
 - **Custom JWT Claims**: Enriches JWT tokens with roles, permissions, and other custom data from your Moxii API
+- **Organization Lifecycle**: Syncs Kinde organizations with Moxii tenants (create/update)
+
+### Custom Pages
+
+- Mobile-optimized authentication pages matching Moxii's brand design
+- Phone OTP and Email OTP verification flows
+- Consistent color scheme with mobile app (Purple #A64BFF)
 
 ## Setup
 
@@ -45,47 +54,45 @@ MOXII_KINDE_WORKFLOW_API_KEY=your_moxii_api_key_here
 
 ## Workflows
 
-### Post User Authentication
+### 1. Organization Lifecycle
+
+**File**: `kindeSrc/environment/workflows/postOrganizationWorkflow.ts`
+
+Runs when organizations are created or updated in Kinde. Creates/updates corresponding tenants in Moxii.
+
+**API Endpoints**:
+
+- `POST {MOXII_API_BASE_URL}/tenants` - Create tenant
+- `GET {MOXII_API_BASE_URL}/tenants/external/{kindeOrgId}` - Get tenant by external ID
+- `PUT {MOXII_API_BASE_URL}/tenants/{tenantId}` - Update tenant
+
+**Error Handling**: Throws error to prevent organization creation if tenant creation fails.
+
+### 2. Post User Authentication
 
 **File**: `kindeSrc/environment/workflows/postUserAuthenticationWorkflow.ts`
 
-This workflow runs after a user successfully authenticates with Kinde. It:
+Runs after a user successfully authenticates with Kinde. Creates users in your Moxii database.
 
-- Extracts the user ID and checks if they are a new user
-- Makes a POST request to your Moxii API to create the user
-- Logs success or error messages
+**API Endpoints**:
 
-**API Endpoint Called**:
+- `POST {MOXII_API_BASE_URL}/entities/staff` - Create staff user
+- `POST {MOXII_API_BASE_URL}/customers/customers` - Create customer user
 
-```
-POST {MOXII_API_BASE_URL}/users
-```
+**Error Handling**: Throws error to prevent user creation in Kinde if backend fails.
 
-**Expected Request Body**:
-The data is sent as URL-encoded form data with a `data` field containing JSON:
-
-```json
-{
-  "kindeUserId": "kinde_user_id",
-  "isNewUser": true
-}
-```
-
-### Custom Token Claims
+### 3. Custom Token Claims
 
 **File**: `kindeSrc/environment/workflows/customTokenClaimsWorkflow.ts`
 
-This workflow runs when Kinde generates JWT tokens. It:
+Runs when Kinde generates JWT tokens. Fetches user roles and permissions from your Moxii API.
 
-- Fetches user roles and permissions from your Moxii API
-- Adds custom claims to the JWT token
-- Falls back to default claims if the API call fails
+**API Endpoints**:
 
-**API Endpoint Called**:
+- `POST {MOXII_API_BASE_URL}/entities/auth/claims` - Get staff claims
+- `POST {MOXII_API_BASE_URL}/customers/customers/auth/claims` - Get customer claims
 
-```
-GET {MOXII_API_BASE_URL}/users/{kindeUserId}/claims
-```
+**Error Handling**: Throws error to prevent token generation if claims cannot be retrieved (shows error instead of giving access).
 
 **Expected Response**:
 
@@ -111,42 +118,101 @@ GET {MOXII_API_BASE_URL}/users/{kindeUserId}/claims
 
 Your Moxii API server must implement these endpoints:
 
-### 1. Create User
+### 1. Tenant Management
 
 ```
-POST /users
+POST /entities/tenants
+Headers:
+  Content-Type: application/json
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
+Body:
+{
+  "name": "string",
+  "slug": "string",
+  "externalId": "string",
+  "status": "active"
+}
+
+GET /entities/tenants/external/{externalId}
 Headers:
   Content-Type: application/json
   x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
 
-Body (from form data field "data"):
+PUT /entities/tenants/{tenantId}
+Headers:
+  Content-Type: application/json
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
+Body:
+{
+  "name": "string",
+  "slug": "string"
+}
+```
+
+### 2. User Creation
+
+```
+POST /entities/staff
+Headers:
+  Content-Type: application/json
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
+Body:
 {
   "kindeUserId": "string",
-  "isNewUser": boolean
+  "orgCode": "string"
 }
 
-Response (200/201):
-{
-  "success": true,
-  "user": { ... }
-}
-```
-
-### 2. Get User Claims
-
-```
-GET /users/{kindeUserId}/claims
+POST /customers/customers
 Headers:
   Content-Type: application/json
   x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
-
-Response (200):
+Body:
 {
-  "roles": ["user", "admin"],
-  "permissions": ["read:profile", "write:profile"],
-  "userId": "internal-user-id",
-  "organizationId": "org-123",  // optional
-  "plan": "premium"             // optional
+  "kindeUserId": "string",
+  "orgCode": "string"
+}
+```
+
+### 3. Auth Claims
+
+```
+POST /entities/auth/claims
+Headers:
+  Content-Type: application/json
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
+Body:
+{
+  "kindeUserId": "string",
+  "orgCode": "string"
+}
+Response:
+{
+  "userId": "string",
+  "userType": "STAFF",
+  "tenantId": "string",
+  "tenantCode": "string",
+  "roleCode": "string",
+  "permissions": ["string"]
+}
+
+POST /customers/customers/auth/claims
+Headers:
+  Content-Type: application/json
+  x-api-key: {MOXII_KINDE_WORKFLOW_API_KEY}
+Body:
+{
+  "kindeUserId": "string",
+  "orgCode": "string"
+}
+Response:
+{
+  "userId": "string",
+  "userType": "CUSTOMER",
+  "tenantId": "string",
+  "tenantCode": "string",
+  "roleCode": "string",
+  "customerId": "string",
+  "permissions": ["string"]
 }
 ```
 
