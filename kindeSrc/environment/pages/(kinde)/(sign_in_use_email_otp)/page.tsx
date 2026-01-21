@@ -9,6 +9,7 @@ type EmailOTPPageProps = KindePageEvent & { widget: React.ReactNode };
 const EmailOTPPage: React.FC<EmailOTPPageProps> = ({ context, request, widget }) => {
   const heading = context.widget.content.heading || "We sent you a six-digit code.";
   const description = context.widget.content.description || "";
+  const backHref = request.route.flow ? `/${request.route.flow}` : "/login";
   
   return (
     <html lang={request.locale.lang} dir={request.locale.isRtl ? 'rtl' : 'ltr'}>
@@ -186,7 +187,7 @@ const EmailOTPPage: React.FC<EmailOTPPageProps> = ({ context, request, widget })
       </head>
       <body>
         <div className="container" data-kinde-root="true">
-          <a className="back-button" href="/" aria-label="Go back">
+          <a className="back-button" href={backHref} aria-label="Go back">
             ‹
           </a>
           <h1 className="heading">{heading}</h1>

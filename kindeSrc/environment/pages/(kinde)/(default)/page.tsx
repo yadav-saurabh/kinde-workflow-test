@@ -15,6 +15,7 @@ const DefaultPage: React.FC<DefaultPageProps> = ({
   request,
   widget,
 }) => {
+  const backHref = request.route.flow ? `/${request.route.flow}` : "/login";
   return (
     <html lang={request.locale.lang} dir={request.locale.isRtl ? "rtl" : "ltr"}>
       <head>
@@ -73,6 +74,39 @@ const DefaultPage: React.FC<DefaultPageProps> = ({
           .widget-container {
             width: 100%;
           }
+
+          .widget-container input[type="tel"] {
+            padding: 0;
+            border: none;
+            border-bottom: 1px solid #e0e0e0;
+            border-radius: 0;
+            background: transparent;
+          }
+
+          .widget-container select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            pointer-events: none;
+            background: transparent;
+            border: none;
+            padding: 0;
+          }
+
+          .widget-container select::-ms-expand {
+            display: none;
+          }
+
+          .widget-container label[for*="first_name"],
+          .widget-container label[for*="last_name"],
+          .widget-container input[name*="first_name"],
+          .widget-container input[name*="last_name"],
+          .widget-container input[name*="given_name"],
+          .widget-container input[name*="family_name"],
+          .widget-container input[id*="first_name"],
+          .widget-container input[id*="last_name"] {
+            display: none !important;
+          }
           
           @media (max-width: 480px) {
             .container {
@@ -87,7 +121,7 @@ const DefaultPage: React.FC<DefaultPageProps> = ({
       </head>
       <body>
         <div className="container" data-kinde-root="true">
-          <a className="back-button" href="/" aria-label="Go back">
+          <a className="back-button" href={backHref} aria-label="Go back">
             ‹
           </a>
           <h1 className="heading">{context.widget.content.heading}</h1>
