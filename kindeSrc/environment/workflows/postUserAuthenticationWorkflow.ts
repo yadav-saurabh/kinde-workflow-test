@@ -50,8 +50,7 @@ export default async function (event: onPostAuthenticationEvent) {
     isNewKindeUser,
     orgCode,
     appName,
-    }
-  );
+  });
 
   // Skip if not a new user (we only create on first login)
   if (!isNewKindeUser) {
@@ -65,30 +64,19 @@ export default async function (event: onPostAuthenticationEvent) {
 
   if (!apiBaseUrl || !apiKey) {
     console.error(
-      "[Moxii] Missing API configuration. Set MOXII_API_BASE_URL and MOXII_KINDE_WORKFLOW_API_KEY in Kinde env vars"
+      "[Moxii] Missing API configuration. Set MOXII_API_BASE_URL and MOXII_KINDE_WORKFLOW_API_KEY in Kinde env vars",
     );
     throw new Error("Missing API configuration - cannot create user");
   }
 
   try {
-
     // Determine user type based on app name
     const userType = determineUserType(appName);
 
     if (userType === "STAFF") {
-      await createStaffUser(
-        apiBaseUrl,
-        apiKey,
-        userId,
-        orgCode
-      );
+      await createStaffUser(apiBaseUrl, apiKey, userId, orgCode);
     } else if (userType === "CUSTOMER") {
-      await createCustomerUser(
-        apiBaseUrl,
-        apiKey,
-        userId,
-        orgCode
-      );
+      await createCustomerUser(apiBaseUrl, apiKey, userId, orgCode);
     } else {
       console.error(`[Moxii] Unknown user type for app: ${appName}`);
       throw new Error(`Unknown user type for app: ${appName}`);
@@ -106,15 +94,38 @@ export default async function (event: onPostAuthenticationEvent) {
 function determineUserType(appName: string): "STAFF" | "CUSTOMER" | "UNKNOWN" {
   const lowerAppName = appName.toLowerCase();
 
-  if (lowerAppName.includes("staff") || lowerAppName.includes("admin") || lowerAppName.includes("backoffice")) {
+  if (
+    lowerAppName.includes("staff") ||
+    lowerAppName.includes("admin") ||
+    lowerAppName.includes("backoffice")
+  ) {
     return "STAFF";
   }
 
-  if (lowerAppName.includes("customer") || lowerAppName.includes("client") || lowerAppName.includes("portal")) {
+  if (
+    lowerAppName.includes("customer") ||
+    lowerAppName.includes("client") ||
+    lowerAppName.includes("portal")
+  ) {
     return "CUSTOMER";
   }
 
   return "UNKNOWN";
+}
+
+/**
+ * Convert object to URLSearchParams
+ */
+function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
+  const params = new URLSearchParams();
+
+  Object.entries(obj).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      params.append(key, String(value));
+    }
+  });
+
+  return params;
 }
 
 /**
@@ -124,7 +135,7 @@ async function createStaffUser(
   apiBaseUrl: string,
   apiKey: string,
   kindeUserId: string,
-  orgCode?: string
+  orgCode?: string,
 ) {
   console.log(`[Moxii] Creating STAFF user:`, { kindeUserId, orgCode });
 
@@ -133,15 +144,18 @@ async function createStaffUser(
     orgCode,
   };
 
-  const response = await fetch<{ error?: string }>(`${apiBaseUrl}/entities/staff`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
+  const response = await fetch<{ error?: string }>(
+    `${apiBaseUrl}/entities/staff`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: toURLSearchParams(payload),
+      responseFormat: "json",
     },
-    body: JSON.stringify(payload),
-    responseFormat: "json",
-  });
+  );
 
   if (!response || response.error) {
     console.error("[Moxii] Failed to create staff user:", response);
@@ -159,7 +173,7 @@ async function createCustomerUser(
   apiBaseUrl: string,
   apiKey: string,
   kindeUserId: string,
-  orgCode?: string
+  orgCode?: string,
 ) {
   console.log(`[Moxii] Creating CUSTOMER user:`, { kindeUserId, orgCode });
 
@@ -171,14 +185,15 @@ async function createCustomerUser(
   const response = await fetch<{ error?: string }>(
     `${apiBaseUrl}/customers/customers`,
     {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: toURLSearchParams(payload),
+      responseFormat: "json",
     },
-    body: JSON.stringify(payload),
-    responseFormat: "json",
-  });
+  );
 
   if (!response || response.error) {
     console.error("[Moxii] Failed to create customer user:", response);

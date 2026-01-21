@@ -127,6 +127,21 @@ function determineUserType(appName: string): "STAFF" | "CUSTOMER" | "UNKNOWN" {
 }
 
 /**
+ * Convert object to URLSearchParams
+ */
+function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
+  const params = new URLSearchParams();
+
+  Object.entries(obj).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      params.append(key, String(value));
+    }
+  });
+
+  return params;
+}
+
+/**
  * Get claims for staff users from entity-service
  */
 async function getStaffClaims(
@@ -157,7 +172,7 @@ async function getStaffClaims(
       "Content-Type": "application/json",
       "x-api-key": apiKey,
     },
-    body: JSON.stringify(payload),
+    body: toURLSearchParams(payload),
     responseFormat: "json",
   });
 
@@ -200,7 +215,7 @@ async function getCustomerClaims(
       "Content-Type": "application/json",
       "x-api-key": apiKey,
     },
-    body: JSON.stringify(payload),
+    body: toURLSearchParams(payload),
     responseFormat: "json",
   });
 
