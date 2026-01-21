@@ -19,7 +19,7 @@ import {
   WorkflowTrigger,
   onPostAuthenticationEvent,
   getEnvironmentVariable,
-  fetch,
+  secureFetch,
 } from "@kinde/infrastructure";
 
 export const workflowSettings: WorkflowSettings = {
@@ -27,7 +27,7 @@ export const workflowSettings: WorkflowSettings = {
   name: "Post Authentication - Create/Update User in Moxii",
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
-    "kinde.fetch": {},
+    "kinde.secureFetch": {},
     "kinde.env": {},
   },
 };
@@ -36,6 +36,9 @@ export const workflowSettings: WorkflowSettings = {
  * Main workflow function
  */
 export default async function (event: onPostAuthenticationEvent) {
+  // TODO: remove after testing
+  console.log(event);
+
   const userId = event.context.user.id;
   const isNewKindeUser = event.context.auth.isNewUserRecordCreated;
 
@@ -144,8 +147,8 @@ async function createStaffUser(
     orgCode,
   };
 
-  const response = await fetch<{ error?: string }>(
-    `${apiBaseUrl}/entities/staff`,
+  const response = await secureFetch<{ error?: string }>(
+    `${apiBaseUrl}/entities/staff/kinde`,
     {
       method: "POST",
       headers: {
@@ -182,8 +185,8 @@ async function createCustomerUser(
     orgCode,
   };
 
-  const response = await fetch<{ error?: string }>(
-    `${apiBaseUrl}/customers/customers`,
+  const response = await secureFetch<{ error?: string }>(
+    `${apiBaseUrl}/customers/customers/kinde`,
     {
       method: "POST",
       headers: {

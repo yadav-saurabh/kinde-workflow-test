@@ -20,7 +20,7 @@ import {
   WorkflowTrigger,
   onUserTokenGeneratedEvent,
   getEnvironmentVariable,
-  fetch,
+  secureFetch,
   accessTokenCustomClaims,
   idTokenCustomClaims,
 } from "@kinde/infrastructure";
@@ -30,7 +30,7 @@ export const workflowSettings: WorkflowSettings = {
   name: "Token Generation - Add Moxii Claims to JWT",
   trigger: WorkflowTrigger.UserTokenGeneration,
   bindings: {
-    "kinde.fetch": {},
+    "kinde.secureFetch": {},
     "kinde.env": {},
     "kinde.accessToken": {},
     "kinde.idToken": {},
@@ -42,6 +42,8 @@ export const workflowSettings: WorkflowSettings = {
  * Main workflow function
  */
 export default async function (event: onUserTokenGeneratedEvent) {
+  // TODO: remove after testing
+  console.log(event);
   const userId = event.context.user.id;
 
   // Get organization code if user is part of an org
@@ -157,7 +159,7 @@ async function getStaffClaims(
     orgCode,
   };
 
-  const response = await fetch<{
+  const response = await secureFetch<{
     userId: string;
     userType: string;
     tenantId: string;
@@ -201,7 +203,7 @@ async function getCustomerClaims(
     orgCode,
   };
 
-  const response = await fetch<{
+  const response = await secureFetch<{
     userId: string;
     userType: string;
     tenantId: string;
@@ -209,7 +211,7 @@ async function getCustomerClaims(
     roleCode: string;
     customerId: string;
     permissions: string[];
-  }>(`${apiBaseUrl}/customers/customers/auth/claims`, {
+  }>(`${apiBaseUrl}/customers/auth/claims`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
