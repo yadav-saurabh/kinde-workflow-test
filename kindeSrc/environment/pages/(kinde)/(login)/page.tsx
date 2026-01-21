@@ -94,9 +94,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ context, request, widget }) => {
           }
 
           :root {
-            --kinde-button-border-radius: 12px;
+            --kinde-button-border-radius: 100px;
             --kinde-primary-button-background-color: #A64BFF;
             --kinde-primary-button-hover-background-color: #7B34E1;
+            --kinde-input-border-radius: 0;
+            --kinde-input-background-color: transparent;
+            --kinde-input-border-color: #E0E0E0;
+            --kinde-input-focus-border-color: #A64BFF;
+            --kinde-input-box-shadow: none;
+            --kinde-input-focus-box-shadow: none;
           }
 
           [data-kinde-form-field-name="given_name"],
@@ -104,21 +110,29 @@ const LoginPage: React.FC<LoginPageProps> = ({ context, request, widget }) => {
             display: none !important;
           }
 
-          [data-kinde-control-select-text],
           [data-kinde-control-input] {
             font-size: 17px !important;
-            padding: 0 !important;
+            padding: 8px 0 !important;
             border: none !important;
-            border-bottom: 1px solid #E0E0E0 !important;
+            border-bottom: 1px solid var(--kinde-input-border-color) !important;
             border-radius: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
           }
 
-          [data-kinde-control-select-text]:focus,
           [data-kinde-control-input]:focus {
             outline: none !important;
-            border-bottom-color: #A64BFF !important;
+            border-bottom-color: var(--kinde-input-focus-border-color) !important;
+          }
+
+          [data-kinde-control-select-text] {
+            font-size: 17px !important;
+            padding: 8px 0 !important;
+            border: none !important;
+            border-bottom: 1px solid var(--kinde-input-border-color) !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
           }
 
           .widget-container a {
