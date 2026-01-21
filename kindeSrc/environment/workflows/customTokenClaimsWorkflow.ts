@@ -60,9 +60,8 @@ export default async function (event: onUserTokenGeneratedEvent) {
 
   // Get API configuration
   const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
-  const apiKey = getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
 
-  if (!apiBaseUrl || !apiKey) {
+  if (!apiBaseUrl) {
     console.error(
       "[Moxii] Missing API configuration. Cannot add Moxii claims to token.",
     );
@@ -75,9 +74,9 @@ export default async function (event: onUserTokenGeneratedEvent) {
 
     let claims;
     if (userType === "STAFF") {
-      claims = await getStaffClaims(apiBaseUrl, apiKey, userId, orgCode);
+      claims = await getStaffClaims(apiBaseUrl, userId, orgCode);
     } else if (userType === "CUSTOMER") {
-      claims = await getCustomerClaims(apiBaseUrl, apiKey, userId, orgCode);
+      claims = await getCustomerClaims(apiBaseUrl, userId, orgCode);
     } else {
       console.error(`[Moxii] Unknown user type for app: ${appName}`);
       throw new Error(`Unknown user type for app: ${appName}`);
@@ -148,7 +147,6 @@ function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
  */
 async function getStaffClaims(
   apiBaseUrl: string,
-  apiKey: string,
   kindeUserId: string,
   orgCode?: string,
 ) {
@@ -172,7 +170,6 @@ async function getStaffClaims(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": apiKey,
     },
     body: toURLSearchParams(payload),
     responseFormat: "json",
@@ -192,7 +189,6 @@ async function getStaffClaims(
  */
 async function getCustomerClaims(
   apiBaseUrl: string,
-  apiKey: string,
   kindeUserId: string,
   orgCode?: string,
 ) {
@@ -215,7 +211,6 @@ async function getCustomerClaims(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": apiKey,
     },
     body: toURLSearchParams(payload),
     responseFormat: "json",

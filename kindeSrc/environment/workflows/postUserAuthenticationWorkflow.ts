@@ -63,9 +63,8 @@ export default async function (event: onPostAuthenticationEvent) {
 
   // Get API configuration from Kinde environment variables
   const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
-  const apiKey = getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
 
-  if (!apiBaseUrl || !apiKey) {
+  if (!apiBaseUrl) {
     console.error(
       "[Moxii] Missing API configuration. Set MOXII_API_BASE_URL and MOXII_KINDE_WORKFLOW_API_KEY in Kinde env vars",
     );
@@ -77,9 +76,9 @@ export default async function (event: onPostAuthenticationEvent) {
     const userType = determineUserType(appName);
 
     if (userType === "STAFF") {
-      await createStaffUser(apiBaseUrl, apiKey, userId, orgCode);
+      await createStaffUser(apiBaseUrl, userId, orgCode);
     } else if (userType === "CUSTOMER") {
-      await createCustomerUser(apiBaseUrl, apiKey, userId, orgCode);
+      await createCustomerUser(apiBaseUrl, userId, orgCode);
     } else {
       console.error(`[Moxii] Unknown user type for app: ${appName}`);
       throw new Error(`Unknown user type for app: ${appName}`);
@@ -136,7 +135,6 @@ function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
  */
 async function createStaffUser(
   apiBaseUrl: string,
-  apiKey: string,
   kindeUserId: string,
   orgCode?: string,
 ) {
@@ -153,7 +151,6 @@ async function createStaffUser(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
       },
       body: toURLSearchParams(payload),
       responseFormat: "json",
@@ -174,7 +171,6 @@ async function createStaffUser(
  */
 async function createCustomerUser(
   apiBaseUrl: string,
-  apiKey: string,
   kindeUserId: string,
   orgCode?: string,
 ) {
@@ -191,7 +187,6 @@ async function createCustomerUser(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
       },
       body: toURLSearchParams(payload),
       responseFormat: "json",
