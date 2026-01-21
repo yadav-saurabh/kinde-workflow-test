@@ -1,14 +1,22 @@
-'use server';
+"use server";
 
-import { getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
-import React from 'react';
-import { renderToString } from 'react-dom/server.browser';
+import {
+  getKindeRequiredCSS,
+  getKindeWidget,
+  type KindePageEvent,
+} from "@kinde/infrastructure";
+import React from "react";
+import { renderToString } from "react-dom/server.browser";
 
 type DefaultPageProps = KindePageEvent & { widget: React.ReactNode };
 
-const DefaultPage: React.FC<DefaultPageProps> = ({ context, request, widget }) => {
+const DefaultPage: React.FC<DefaultPageProps> = ({
+  context,
+  request,
+  widget,
+}) => {
   return (
-    <html lang={request.locale.lang} dir={request.locale.isRtl ? 'rtl' : 'ltr'}>
+    <html lang={request.locale.lang} dir={request.locale.isRtl ? "rtl" : "ltr"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -83,9 +91,7 @@ const DefaultPage: React.FC<DefaultPageProps> = ({ context, request, widget }) =
             ‹
           </a>
           <h1 className="heading">{context.widget.content.heading}</h1>
-          <div className="widget-container">
-            {widget}
-          </div>
+          <div className="widget-container">{widget}</div>
         </div>
       </body>
     </html>
