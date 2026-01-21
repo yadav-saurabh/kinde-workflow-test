@@ -31,7 +31,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ context, request, widget })
 
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-            background: #F6EFE7;
+            background-color: #F6EFE7 !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;

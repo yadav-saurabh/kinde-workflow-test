@@ -31,7 +31,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ context, request, widget }) => {
 
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-            background: #F6EFE7;
+            background: #F6EFE7 !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;

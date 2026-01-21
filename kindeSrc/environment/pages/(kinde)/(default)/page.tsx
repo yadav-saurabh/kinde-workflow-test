@@ -33,7 +33,7 @@ const DefaultPage: React.FC<DefaultPageProps> = ({
           
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #F6EFE7;
+            background: #F6EFE7 !important;
             min-height: 100vh;
             display: flex;
             align-items: center;

@@ -28,7 +28,7 @@ const SignUpEmailOTPPage: React.FC<SignUpEmailOTPPageProps> = ({ context, reques
           
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-            background: #F6EFE7;
+            background: #F6EFE7 !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
