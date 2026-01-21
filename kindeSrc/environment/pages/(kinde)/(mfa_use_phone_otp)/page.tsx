@@ -91,32 +91,36 @@ const PhoneOTPVerifyPage: React.FC<PhoneOTPVerifyPageProps> = ({ context, reques
           }
           
           /* Custom styling for OTP input */
-          .widget-container input[type="text"],
-          .widget-container input[type="tel"] {
-            font-size: 20px;
-            padding: 16px;
-            border: 1px solid #E0E0E0;
-            border-radius: 12px;
+          .widget-container [data-kinde-form-field] {
+            margin-bottom: 24px;
+          }
+
+          .widget-container [data-kinde-control-otp] {
+            font-size: 20px !important;
+            padding: 16px !important;
+            border: 1px solid #E0E0E0 !important;
+            border-radius: 12px !important;
             width: 100%;
-            font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-            background: white;
-            letter-spacing: 8px;
-            text-align: center;
+            font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace !important;
+            background: white !important;
+            letter-spacing: 8px !important;
+            text-align: center !important;
+            box-shadow: none !important;
           }
           
-          .widget-container input[type="text"]:focus,
-          .widget-container input[type="tel"]:focus {
-            outline: none;
-            border-color: #A64BFF;
-            box-shadow: 0 0 0 3px rgba(107, 70, 255, 0.1);
+          .widget-container [data-kinde-control-otp]:focus {
+            outline: none !important;
+            border-color: #A64BFF !important;
+            box-shadow: 0 0 0 3px rgba(107, 70, 255, 0.1) !important;
           }
           
-          .widget-container input[type="text"]::placeholder {
+          .widget-container [data-kinde-control-otp]::placeholder {
             letter-spacing: 4px;
             color: #BDBDBD;
           }
           
-          .widget-container button[type="submit"] {
+          .widget-container button[type="submit"],
+          .widget-container [data-kinde-button] {
             background: #A64BFF;
             color: white;
             border: none;
@@ -126,20 +130,23 @@ const PhoneOTPVerifyPage: React.FC<PhoneOTPVerifyPageProps> = ({ context, reques
             font-weight: 600;
             width: 100%;
             cursor: pointer;
-            margin-top: 24px;
+            margin-top: 0;
             font-family: inherit;
             transition: background 0.2s;
           }
           
-          .widget-container button[type="submit"]:hover {
+          .widget-container button[type="submit"]:hover,
+          .widget-container [data-kinde-button]:hover {
             background: #7B34E1;
           }
           
-          .widget-container button[type="submit"]:active {
+          .widget-container button[type="submit"]:active,
+          .widget-container [data-kinde-button]:active {
             background: #7B34E1;
           }
           
-          .widget-container button[type="submit"]:disabled {
+          .widget-container button[type="submit"]:disabled,
+          .widget-container [data-kinde-button]:disabled {
             background: #E0E0E0;
             color: #9E9E9E;
             cursor: not-allowed;
@@ -161,20 +168,6 @@ const PhoneOTPVerifyPage: React.FC<PhoneOTPVerifyPageProps> = ({ context, reques
           
           .widget-container a:active {
             opacity: 0.6;
-          }
-          
-          /* Helper text */
-          .widget-container .helper-text {
-            font-size: 13px;
-            color: #757575;
-            margin-top: 8px;
-            text-align: center;
-          }
-          
-          .widget-container .error-text {
-            font-size: 13px;
-            color: #D32F2F;
-            margin-top: 8px;
           }
           
           @media (max-width: 480px) {

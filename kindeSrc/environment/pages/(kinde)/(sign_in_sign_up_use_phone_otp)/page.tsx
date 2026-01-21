@@ -83,21 +83,37 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
           }
           
           /* Custom styling for Kinde widget */
+          .widget-container [data-kinde-form-field] {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+          }
+
+          .widget-container [data-kinde-control-label] {
+            font-size: 14px;
+            color: #1A1A2E;
+            font-weight: 500;
+          }
+
+          .widget-container [data-kinde-control-select-text],
           .widget-container input[type="tel"] {
             font-size: 17px;
-            padding: 0;
-            border: none;
-            border-bottom: 1px solid #E0E0E0;
-            border-radius: 0;
+            padding: 0 !important;
+            border: none !important;
+            border-bottom: 1px solid #E0E0E0 !important;
+            border-radius: 0 !important;
             width: 100%;
             font-family: inherit;
-            background: transparent;
+            background: transparent !important;
+            box-shadow: none !important;
           }
-          
+
+          .widget-container [data-kinde-control-select-text]:focus,
           .widget-container input[type="tel"]:focus {
             outline: none;
-            border-bottom-color: #A64BFF;
-            box-shadow: none;
+            border-bottom-color: #A64BFF !important;
+            box-shadow: none !important;
           }
 
           .widget-container select {
@@ -110,6 +126,7 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
             padding: 0;
             font-size: 17px;
             color: #1A1A2E;
+            background-image: none;
           }
 
           .widget-container select::-ms-expand {
@@ -127,7 +144,8 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
             display: none !important;
           }
           
-          .widget-container button[type="submit"] {
+          .widget-container button[type="submit"],
+          .widget-container [data-kinde-button] {
             background: #A64BFF;
             color: white;
             border: none;
@@ -142,15 +160,18 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
             transition: background 0.2s;
           }
           
-          .widget-container button[type="submit"]:hover {
+          .widget-container button[type="submit"]:hover,
+          .widget-container [data-kinde-button]:hover {
             background: #7B34E1;
           }
           
-          .widget-container button[type="submit"]:active {
+          .widget-container button[type="submit"]:active,
+          .widget-container [data-kinde-button]:active {
             background: #7B34E1;
           }
           
-          .widget-container button[type="submit"]:disabled {
+          .widget-container button[type="submit"]:disabled,
+          .widget-container [data-kinde-button]:disabled {
             background: #E0E0E0;
             color: #9E9E9E;
             cursor: not-allowed;
