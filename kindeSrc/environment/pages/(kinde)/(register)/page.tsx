@@ -93,98 +93,32 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ context, request, widget })
             flex: 1;
           }
 
-          .widget-container [data-kinde-form-field] {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 16px;
+          :root {
+            --kinde-button-border-radius: 12px;
+            --kinde-primary-button-background-color: #A64BFF;
+            --kinde-primary-button-hover-background-color: #7B34E1;
           }
 
-          .widget-container [data-kinde-control-label] {
-            font-size: 14px;
-            color: #1A1A2E;
-            font-weight: 500;
+          [data-kinde-form-field-name="given_name"],
+          [data-kinde-form-field-name="family_name"] {
+            display: none !important;
           }
 
-          .widget-container [data-kinde-control-select-text],
-          .widget-container input[type="tel"] {
-            font-size: 17px;
+          [data-kinde-control-select-text],
+          [data-kinde-control-input] {
+            font-size: 17px !important;
             padding: 0 !important;
             border: none !important;
             border-bottom: 1px solid #E0E0E0 !important;
             border-radius: 0 !important;
-            width: 100%;
-            font-family: inherit;
             background: transparent !important;
             box-shadow: none !important;
           }
 
-          .widget-container [data-kinde-control-select-text]:focus,
-          .widget-container input[type="tel"]:focus {
-            outline: none;
+          [data-kinde-control-select-text]:focus,
+          [data-kinde-control-input]:focus {
+            outline: none !important;
             border-bottom-color: #A64BFF !important;
-            box-shadow: none !important;
-          }
-
-          .widget-container select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            pointer-events: none;
-            background: transparent;
-            border: none;
-            padding: 0;
-            font-size: 17px;
-            color: #1A1A2E;
-            background-image: none;
-          }
-
-          .widget-container select::-ms-expand {
-            display: none;
-          }
-
-          .widget-container label[for*="first_name"],
-          .widget-container label[for*="last_name"],
-          .widget-container input[name*="first_name"],
-          .widget-container input[name*="last_name"],
-          .widget-container input[name*="given_name"],
-          .widget-container input[name*="family_name"],
-          .widget-container input[id*="first_name"],
-          .widget-container input[id*="last_name"] {
-            display: none !important;
-          }
-
-          .widget-container button[type="submit"],
-          .widget-container [data-kinde-button] {
-            background: #A64BFF;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 17px;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            margin-top: 16px;
-            font-family: inherit;
-            transition: background 0.2s;
-          }
-
-          .widget-container button[type="submit"]:hover,
-          .widget-container [data-kinde-button]:hover {
-            background: #7B34E1;
-          }
-
-          .widget-container button[type="submit"]:active,
-          .widget-container [data-kinde-button]:active {
-            background: #7B34E1;
-          }
-
-          .widget-container button[type="submit"]:disabled,
-          .widget-container [data-kinde-button]:disabled {
-            background: #E0E0E0;
-            color: #9E9E9E;
-            cursor: not-allowed;
           }
 
           .widget-container a {
