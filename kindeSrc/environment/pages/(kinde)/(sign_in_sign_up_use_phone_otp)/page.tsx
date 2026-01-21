@@ -1,6 +1,6 @@
 'use server';
 
-import { getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
+import { getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
 import React from 'react';
 import { renderToString } from 'react-dom/server.browser';
 
@@ -15,6 +15,7 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <title>{context.widget.content.pageTitle}</title>
+        {getKindeRequiredCSS()}
         <style>{`
           * {
             margin: 0;
@@ -171,8 +172,8 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
         `}</style>
       </head>
       <body>
-        <div className="container">
-          <a className="back-button" href="javascript:history.back()" aria-label="Go back">
+        <div className="container" data-kinde-root="true">
+          <a className="back-button" href="/" aria-label="Go back">
             ‹
           </a>
           <h1 className="heading">{heading}</h1>
