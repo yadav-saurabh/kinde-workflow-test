@@ -1,6 +1,6 @@
 'use server';
 
-import { getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
+import { getKindeNonce, getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
 import React from 'react';
 import { renderToString } from 'react-dom/server.browser';
 
@@ -21,7 +21,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ context, request, widget })
         />
         <title>{context.widget.content.pageTitle}</title>
         {getKindeRequiredCSS()}
-        <style>{`
+        <style nonce={getKindeNonce()}>{`
           * {
             margin: 0;
             padding: 0;

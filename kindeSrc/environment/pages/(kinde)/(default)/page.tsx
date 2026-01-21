@@ -2,6 +2,7 @@
 
 import {
   getKindeRequiredCSS,
+  getKindeNonce,
   getKindeWidget,
   type KindePageEvent,
 } from "@kinde/infrastructure";
@@ -23,7 +24,7 @@ const DefaultPage: React.FC<DefaultPageProps> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{context.widget.content.pageTitle}</title>
         {getKindeRequiredCSS()}
-        <style>{`
+        <style nonce={getKindeNonce()}>{`
           * {
             margin: 0;
             padding: 0;

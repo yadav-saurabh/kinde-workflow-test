@@ -1,6 +1,6 @@
 'use server';
 
-import { getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
+import { getKindeNonce, getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
 import React from 'react';
 import { renderToString } from 'react-dom/server.browser';
 
@@ -17,7 +17,7 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <title>{context.widget.content.pageTitle}</title>
         {getKindeRequiredCSS()}
-        <style>{`
+        <style nonce={getKindeNonce()}>{`
           * {
             margin: 0;
             padding: 0;
