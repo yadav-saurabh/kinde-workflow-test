@@ -30,7 +30,6 @@ export const workflowSettings: WorkflowSettings = {
   bindings: {
     "kinde.secureFetch": {},
     "kinde.env": {},
-    "kinde.fetch": {},
     "kinde.accessToken": {},
     "kinde.idToken": {},
     url: {},
@@ -115,7 +114,7 @@ async function getStaffClaims(
     permissions: string[];
   }>(`${apiBaseUrl}/entities/auth/claims`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: toURLSearchParams(payload),
     responseFormat: "json",
   });
@@ -143,7 +142,7 @@ async function getCustomerClaims(
     permissions: string[];
   }>(`${apiBaseUrl}/customers/auth/claims`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: toURLSearchParams(payload),
     responseFormat: "json",
   });

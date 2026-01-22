@@ -26,7 +26,6 @@ export const workflowSettings: WorkflowSettings = {
   bindings: {
     "kinde.secureFetch": {},
     "kinde.env": {},
-    "kinde.fetch": {},
     url: {},
   },
 };
@@ -102,7 +101,7 @@ async function createStaffUser(
     `${apiBaseUrl}/entities/staff/kinde`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: toURLSearchParams(payload),
       responseFormat: "json",
     },
@@ -124,7 +123,7 @@ async function createCustomerUser(
     `${apiBaseUrl}/customers/customers/kinde`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: toURLSearchParams(payload),
       responseFormat: "json",
     },
