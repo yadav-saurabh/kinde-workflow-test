@@ -140,30 +140,40 @@ const MoxiiLoginPage = async ({request, context}) => {
             margin: 0 0 1.25rem 0;
           }
           
-          /* Widget wrapper */
+          /* Widget wrapper - ensure full height */
           .moxii-widget {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            flex: 1;
+            min-height: 0;
           }
           
-          /* Form wrapper to push button to bottom */
-          .moxii-widget form {
-            display: flex;
-            flex-direction: column;
-            min-height: calc(100dvh - 250px);
+          /* Kinde widget form - make it fill space */
+          [data-kinde-widget] form,
+          .moxii-widget form,
+          form[data-kinde-form] {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            min-height: 100% !important;
           }
           
-          /* Form fields wrapper */
-          .moxii-widget form > div:not(:last-child) {
+          /* Push button to bottom */
+          [data-kinde-widget] form button[type="submit"],
+          .moxii-widget form button[type="submit"],
+          form[data-kinde-form] button[type="submit"],
+          button[data-kinde-submit],
+          .kinde-button-primary,
+          button.kinde-button {
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+          }
+          
+          /* Form fields at top */
+          [data-kinde-widget] form > div:not(:has(button)),
+          .moxii-widget form > div:not(:has(button)) {
             flex: 0 0 auto;
-          }
-          
-          /* Button container pushed to bottom */
-          .moxii-widget form > div:last-child,
-          .moxii-widget form > button[type="submit"] {
-            margin-top: auto;
-            padding-top: 2rem;
+            margin-bottom: 1rem;
           }
           
           /* Primary button customization */

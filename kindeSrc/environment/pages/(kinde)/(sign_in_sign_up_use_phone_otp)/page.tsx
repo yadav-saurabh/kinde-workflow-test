@@ -132,36 +132,71 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
           .moxii-widget {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            flex: 1;
+            min-height: 0;
           }
           
-          .moxii-widget form {
-            display: flex;
-            flex-direction: column;
-            min-height: calc(100dvh - 250px);
+          /* Kinde widget form - make it fill space */
+          [data-kinde-widget] form,
+          .moxii-widget form,
+          form[data-kinde-form] {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            min-height: 100% !important;
           }
           
-          .moxii-widget form > div:not(:last-child) {
+          /* Push button to bottom */
+          [data-kinde-widget] form button[type="submit"],
+          .moxii-widget form button[type="submit"],
+          form[data-kinde-form] button[type="submit"],
+          button[data-kinde-submit],
+          .kinde-button-primary,
+          button.kinde-button {
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+          }
+          
+          /* Form fields at top */
+          [data-kinde-widget] form > div:not(:has(button)),
+          .moxii-widget form > div:not(:has(button)) {
             flex: 0 0 auto;
+            margin-bottom: 1rem;
           }
           
-          .moxii-widget form > div:last-child,
-          .moxii-widget form > button[type="submit"] {
-            margin-top: auto;
-            padding-top: 2rem;
-          }
-          
-          /* OTP input specific styles */
+          /* OTP input specific styles - matches Figma */
           input[data-kinde-otp-input],
-          input[type="text"][inputmode="numeric"] {
-            font-size: 28px !important;
-            font-weight: 400 !important;
-            letter-spacing: 2px;
+          input[type="text"][inputmode="numeric"],
+          input[type="tel"],
+          .kinde-otp-input input {
+            font-size: 24px !important;
+            font-weight: 500 !important;
+            letter-spacing: 0;
             text-align: center;
-            border: 1px solid var(--moxii-outline);
-            background: var(--moxii-white);
-            border-radius: 16px;
-            padding: 14px 16px;
+            border: 1px solid var(--moxii-outline) !important;
+            background: var(--moxii-white) !important;
+            border-radius: 12px !important;
+            padding: 16px 8px !important;
+            width: 48px !important;
+            height: 56px !important;
+            margin: 0 4px !important;
+          }
+          
+          input[data-kinde-otp-input]:focus,
+          input[type="text"][inputmode="numeric"]:focus,
+          .kinde-otp-input input:focus {
+            outline: none !important;
+            border-color: var(--moxii-primary) !important;
+            border-width: 2px !important;
+          }
+          
+          /* OTP container */
+          .kinde-otp-input-container,
+          [data-kinde-otp-container] {
+            display: flex !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            margin: 1rem 0 !important;
           }
           
           /* Resend code link */
@@ -275,6 +310,42 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
             }
           }
         `}</style>
+        
+        {/* OTP input enhancement script */}
+        <script nonce={getKindeNonce()}>{`
+          document.addEventListener('DOMContentLoaded', function() {
+            // Find all OTP input fields
+            const otpInputs = document.querySelectorAll('input[inputmode="numeric"], input[data-kinde-otp-input]');
+            
+            otpInputs.forEach((input, index) => {
+              // Auto-focus next input on entry
+              input.addEventListener('input', function(e) {
+                if (this.value.length === 1 && index < otpInputs.length - 1) {
+                  otpInputs[index + 1].focus();
+                }
+              });
+              
+              // Handle backspace to go to previous input
+              input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                  otpInputs[index - 1].focus();
+                }
+              });
+              
+              // Clear on tap if filled
+              input.addEventListener('click', function() {
+                if (this.value) {
+                  this.select();
+                }
+              });
+            });
+            
+            // Auto-focus first input
+            if (otpInputs.length > 0) {
+              otpInputs[0].focus();
+            }
+          });
+        `}</script>
       </head>
       <body>
         <div className="moxii-otp-container">
