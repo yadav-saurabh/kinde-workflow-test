@@ -171,6 +171,8 @@ export default async function (event: onUserTokenGeneratedEvent) {
   let claims;
   const userType = determineUserType(appName);
 
+  console.log("userType", userType);
+
   if (userType === "STAFF") {
     claims = await getStaffClaims(apiBaseUrl, userId, orgCode);
   } else if (userType === "CUSTOMER") {

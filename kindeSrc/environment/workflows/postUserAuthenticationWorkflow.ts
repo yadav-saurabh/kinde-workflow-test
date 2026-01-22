@@ -117,6 +117,9 @@ async function createCustomerUser(
   apiBaseUrl: string,
   payload: Payload,
 ): Promise<void> {
+  console.log(payload);
+  console.log(toURLSearchParams(payload));
+  console.log(payload);
   const response = await secureFetch<{ error?: string }>(
     `${apiBaseUrl}/customers/customers/kinde`,
     {
