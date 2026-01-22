@@ -20,6 +20,7 @@ import {
   onPostAuthenticationEvent,
   getEnvironmentVariable,
   secureFetch,
+  createKindeAPI,
 } from "@kinde/infrastructure";
 
 export const workflowSettings: WorkflowSettings = {
@@ -29,6 +30,8 @@ export const workflowSettings: WorkflowSettings = {
   bindings: {
     "kinde.secureFetch": {},
     "kinde.env": {},
+    "kinde.fetch": {}, // Enable Kinde Management API access
+    url: {},
   },
 };
 
@@ -36,8 +39,8 @@ export const workflowSettings: WorkflowSettings = {
  * Main workflow function
  */
 export default async function (event: onPostAuthenticationEvent) {
-  // TODO: remove after testing
-  console.log(event);
+  // Log full event object for testing/debugging (keep for testing with user_type parameter)
+  console.log("[Moxii] Full event object:", event);
 
   const userId = event.context.user.id;
   const isNewKindeUser = event.context.auth.isNewUserRecordCreated;
@@ -45,14 +48,43 @@ export default async function (event: onPostAuthenticationEvent) {
   // Get organization code if user is part of an org
   const orgCode = event.request.authUrlParams?.orgCode;
 
-  // Get app name to determine which service to call
-  const appName = event.context.application?.clientId || "";
+  // Get user_type from URL parameters (passed as &user_type=STAFF or &user_type=CUSTOMER)
+  // const userTypeParam = event.request.authUrlParams?.user_type?.toUpperCase();
+  const userTypeParam = "";
+
+  // Get application properties from Kinde (clientId identifies the app)
+  const application = event.context.application;
+  const clientId = application?.clientId || "";
+
+  // Fetch application properties from Kinde Management API
+  let appName = clientId; // Default to clientId if API call fails
+  let appProperties: { name?: string } | null = null;
+
+  try {
+    const kindeAPI = await createKindeAPI(event);
+    const data = await kindeAPI.get({
+      endpoint: `applications/${encodeURIComponent(clientId)}/properties`,
+    });
+    console.log(data);
+    // Extract application name from properties (prioritize explicit name over ID)
+
+    console.log(`[Moxii] Application properties from Kinde API:`, data);
+  } catch (error) {
+    console.error(
+      "[Moxii] Failed to fetch application properties from Kinde API:",
+      error,
+    );
+    // Fall back to clientId if API call fails
+  }
 
   console.log(`[Moxii] Post-auth workflow triggered:`, {
     userId,
     isNewKindeUser,
     orgCode,
+    userTypeParam,
     appName,
+    clientId,
+    applicationProperties: appProperties,
   });
 
   // Skip if not a new user (we only create on first login)
@@ -72,16 +104,20 @@ export default async function (event: onPostAuthenticationEvent) {
   }
 
   try {
-    // Determine user type based on app name
-    const userType = determineUserType(appName);
+    // Determine user type based on user_type URL parameter (priority) or app name (fallback)
+    const userType = determineUserType(userTypeParam, appName);
 
     if (userType === "STAFF") {
       await createStaffUser(apiBaseUrl, userId, orgCode);
     } else if (userType === "CUSTOMER") {
       await createCustomerUser(apiBaseUrl, userId, orgCode);
     } else {
-      console.error(`[Moxii] Unknown user type for app: ${appName}`);
-      throw new Error(`Unknown user type for app: ${appName}`);
+      console.error(
+        `[Moxii] Unknown user type for app: ${appName} (clientId: ${clientId})`,
+      );
+      throw new Error(
+        `Unknown user type for app: ${appName}. Configure application name/ID to contain 'staff', 'admin', 'backoffice', 'management' for staff users, or 'customer', 'client', 'portal', 'mobile', 'app' for customers. Pass user_type=STAFF or user_type=CUSTOMER in auth URL to override automatic detection.`,
+      );
     }
   } catch (error) {
     console.error("[Moxii] Error in post-auth workflow:", error);
@@ -91,27 +127,62 @@ export default async function (event: onPostAuthenticationEvent) {
 }
 
 /**
- * Determine user type from Kinde application name
+ * Determine user type from user_type parameter or application name
+ * Priority: user_type URL parameter > appName detection
  */
-function determineUserType(appName: string): "STAFF" | "CUSTOMER" | "UNKNOWN" {
-  const lowerAppName = appName.toLowerCase();
+function determineUserType(
+  userTypeParam: string | undefined,
+  appName: string,
+): "STAFF" | "CUSTOMER" | "UNKNOWN" {
+  // If user_type is explicitly passed via URL parameter, use it directly
+  if (userTypeParam) {
+    const upperParam = userTypeParam.toUpperCase();
+    console.log(`[Moxii] Using explicit user_type parameter: ${upperParam}`);
+    if (upperParam === "STAFF") {
+      console.log(`[Moxii] User type determined: STAFF (from URL parameter)`);
+      return "STAFF";
+    }
+    if (upperParam === "CUSTOMER") {
+      console.log(
+        `[Moxii] User type determined: CUSTOMER (from URL parameter)`,
+      );
+      return "CUSTOMER";
+    }
+    console.error(`[Moxii] Unknown user_type parameter: ${upperParam}`);
+    throw new Error(
+      `Unknown user_type parameter: ${upperParam}. Must be 'STAFF' or 'CUSTOMER'.`,
+    );
+  }
 
+  // Otherwise, determine from app name (existing behavior)
+  const lowerAppName = appName.toLowerCase();
+  console.log(`[Moxii] Determining user type from app name: "${appName}"`);
+
+  // Staff applications
   if (
     lowerAppName.includes("staff") ||
     lowerAppName.includes("admin") ||
-    lowerAppName.includes("backoffice")
+    lowerAppName.includes("backoffice") ||
+    lowerAppName.includes("management") ||
+    lowerAppName.includes("portal-staff")
   ) {
+    console.log(`[Moxii] User type determined: STAFF (from app name)`);
     return "STAFF";
   }
 
+  // Customer applications
   if (
     lowerAppName.includes("customer") ||
     lowerAppName.includes("client") ||
-    lowerAppName.includes("portal")
+    lowerAppName.includes("portal") ||
+    lowerAppName.includes("mobile") ||
+    lowerAppName.includes("app")
   ) {
+    console.log(`[Moxii] User type determined: CUSTOMER (from app name)`);
     return "CUSTOMER";
   }
 
+  console.log(`[Moxii] User type determined: UNKNOWN for app: "${appName}"`);
   return "UNKNOWN";
 }
 
