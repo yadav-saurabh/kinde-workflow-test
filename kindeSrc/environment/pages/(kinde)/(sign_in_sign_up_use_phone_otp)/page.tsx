@@ -7,16 +7,15 @@ import {
   getKindeNonce,
   getKindeWidget,
   getKindeCSRF,
-  getLogoUrl,
   getSVGFaviconUrl,
   setKindeDesignerCustomProperties
 } from "@kinde/infrastructure";
 
 /**
- * Default Moxii authentication page
- * Matches the Zentara mobile app design system
+ * Moxii Phone OTP Verification Page
+ * Matches the Figma design for code verification
  */
-const MoxiiLayout = async ({request, context}) => {
+const MoxiiPhoneOTPPage = async ({request, context}) => {
   return (
     <html lang={request.locale.lang} dir={request.locale.isRtl ? "rtl" : "ltr"}>
       <head>
@@ -24,13 +23,12 @@ const MoxiiLayout = async ({request, context}) => {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="robots" content="noindex" />
         <meta name="csrf-token" content={getKindeCSRF()} />
-        <title>{context.widget.content.page_title}</title>
+        <title>Enter verification code - Moxii</title>
         
         <link rel="icon" href={getSVGFaviconUrl()} type="image/svg+xml" />
         {getKindeRequiredCSS()}
         {getKindeRequiredJS()}
         
-        {/* Kinde designer custom properties */}
         <style nonce={getKindeNonce()}>{`
           :root {
             ${setKindeDesignerCustomProperties({
@@ -41,17 +39,14 @@ const MoxiiLayout = async ({request, context}) => {
               primaryButtonColor: "#FFFFFF",
               inputBorderRadius: "16px",
               baseColor: "#1D1B1A",
-              baseFontFamily: "'Space Grotesk', -apple-system, system-ui, BlinkMacSystemFont, Helvetica, Arial, sans-serif"
+              baseFontFamily: "'Space Grotesk', sans-serif"
             })}
           }
         `}</style>
         
-        {/* Moxii custom styles */}
         <style nonce={getKindeNonce()}>{`
-          /* Import Space Grotesk font */
           @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
           
-          /* Moxii color palette */
           :root {
             --moxii-canvas: #F6EFE7;
             --moxii-ink: #1D1B1A;
@@ -60,11 +55,9 @@ const MoxiiLayout = async ({request, context}) => {
             --moxii-outline: #E1D7CC;
             --moxii-primary: #A64BFF;
             --moxii-primary-dark: #7B34E1;
-            --moxii-accent: #F04FD6;
-            --moxii-disabled: #D9D4CE;
-            --moxii-chip: #F0E7DC;
             --moxii-link: #2F7CF6;
             --moxii-white: #FFFFFF;
+            --moxii-disabled: #D9D4CE;
             --moxii-flag-red: #CF142B;
           }
           
@@ -79,14 +72,11 @@ const MoxiiLayout = async ({request, context}) => {
             font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif;
             background: var(--moxii-canvas);
             color: var(--moxii-ink);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
           }
           
-          /* Main container */
-          .moxii-container {
+          .moxii-otp-container {
             min-height: 100vh;
-            min-height: 100dvh; /* Use dynamic viewport height for mobile */
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 1.25rem;
@@ -94,7 +84,6 @@ const MoxiiLayout = async ({request, context}) => {
             position: relative;
           }
           
-          /* Header with back button */
           .moxii-header {
             margin-bottom: 1.5rem;
           }
@@ -110,13 +99,13 @@ const MoxiiLayout = async ({request, context}) => {
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: background 0.2s;
           }
           
           .moxii-back-button:hover {
             background: var(--moxii-chip);
           }
           
-          /* Content area */
           .moxii-content {
             flex: 1;
             display: flex;
@@ -140,35 +129,75 @@ const MoxiiLayout = async ({request, context}) => {
             margin: 0 0 1.25rem 0;
           }
           
-          /* Widget wrapper */
           .moxii-widget {
             display: flex;
             flex-direction: column;
             gap: 1rem;
           }
           
-          /* Form wrapper to push button to bottom */
           .moxii-widget form {
             display: flex;
             flex-direction: column;
             min-height: calc(100dvh - 250px);
           }
           
-          /* Form fields wrapper */
           .moxii-widget form > div:not(:last-child) {
             flex: 0 0 auto;
           }
           
-          /* Button container pushed to bottom */
           .moxii-widget form > div:last-child,
           .moxii-widget form > button[type="submit"] {
             margin-top: auto;
             padding-top: 2rem;
           }
           
-          /* Primary button customization */
-          button[type="submit"],
-          .kinde-button-primary {
+          /* OTP input specific styles */
+          input[data-kinde-otp-input],
+          input[type="text"][inputmode="numeric"] {
+            font-size: 28px !important;
+            font-weight: 400 !important;
+            letter-spacing: 2px;
+            text-align: center;
+            border: 1px solid var(--moxii-outline);
+            background: var(--moxii-white);
+            border-radius: 16px;
+            padding: 14px 16px;
+          }
+          
+          /* Resend code link */
+          .moxii-resend-link {
+            text-align: center;
+            margin: 1.25rem 0;
+          }
+          
+          .moxii-resend-link button,
+          .moxii-resend-link a {
+            background: none;
+            border: none;
+            color: var(--moxii-link);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Space Grotesk', sans-serif;
+          }
+          
+          .moxii-resend-link button:hover,
+          .moxii-resend-link a:hover {
+            text-decoration: underline;
+          }
+          
+          /* Helper text */
+          .moxii-helper-text {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--moxii-muted);
+            margin-top: 0.75rem;
+          }
+          
+          /* Primary button */
+          button[type="submit"] {
             width: 100%;
             height: 48px;
             border-radius: 24px;
@@ -179,26 +208,20 @@ const MoxiiLayout = async ({request, context}) => {
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
           }
           
-          button[type="submit"]:hover:not(:disabled),
-          .kinde-button-primary:hover:not(:disabled) {
+          button[type="submit"]:hover:not(:disabled) {
             background: var(--moxii-primary-dark);
           }
           
-          button[type="submit"]:disabled,
-          .kinde-button-primary:disabled {
+          button[type="submit"]:disabled {
             background: var(--moxii-disabled);
             color: var(--moxii-subtle);
             cursor: not-allowed;
           }
           
-          /* Input field customization */
-          input[type="text"],
-          input[type="tel"],
-          input[type="email"],
-          input[type="password"] {
+          /* Input field */
+          input[type="text"] {
             width: 100%;
             padding: 14px 16px;
             border-radius: 16px;
@@ -210,107 +233,16 @@ const MoxiiLayout = async ({request, context}) => {
             color: var(--moxii-ink);
           }
           
-          /* Phone input specific - no border */
-          input[type="tel"] {
-            border: none;
-            padding-left: 0;
-            background: transparent;
-            font-size: 28px;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-          }
-          
-          input[type="text"]::placeholder,
-          input[type="tel"]::placeholder,
-          input[type="email"]::placeholder,
-          input[type="password"]::placeholder {
+          input[type="text"]::placeholder {
             color: var(--moxii-muted);
           }
           
-          /* Phone placeholder with lighter color */
-          input[type="tel"]::placeholder {
-            color: #D9D4CE;
-            font-weight: 300;
-          }
-          
-          input[type="text"]:focus,
-          input[type="tel"]:focus,
-          input[type="email"]:focus,
-          input[type="password"]:focus {
+          input[type="text"]:focus {
             outline: none;
             border-color: var(--moxii-primary);
           }
           
-          /* Phone input focus - no border change */
-          input[type="tel"]:focus {
-            border: none;
-          }
-          
-          /* Hide labels for phone inputs */
-          label[for*="phone"] {
-            display: none !important;
-          }
-          
-          /* Phone input container styling */
-          .kinde-phone-input-container,
-          [class*="phone"] input[type="tel"] {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          
-          /* Country selector - disable and style */
-          select[name*="country"],
-          select[name*="phone_country"],
-          .kinde-country-selector {
-            pointer-events: none;
-            border: none;
-            background: transparent;
-            font-size: 28px;
-            font-weight: 400;
-            color: var(--moxii-ink);
-            padding: 0;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-          }
-          
-          /* Hide dropdown arrow on country selector */
-          select[name*="country"]::-ms-expand,
-          select[name*="phone_country"]::-ms-expand {
-            display: none;
-          }
-          
-          /* Phone number input wrapper */
-          .kinde-field-wrapper[data-field-type="phone"],
-          div[class*="phone-field"] {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 1rem 0;
-          }
-          
-          /* Flag icon styling */
-          .kinde-flag-icon,
-          [class*="flag"] {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-          }
-          
-          /* Links */
-          a {
-            color: var(--moxii-link);
-            text-decoration: none;
-            font-weight: 600;
-          }
-          
-          a:hover {
-            text-decoration: underline;
-          }
-          
           /* Error messages */
-          .kinde-error-message,
           [role="alert"] {
             padding: 12px;
             border-radius: 12px;
@@ -320,20 +252,21 @@ const MoxiiLayout = async ({request, context}) => {
             font-size: 13px;
             font-weight: 500;
             margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
           }
           
-          /* Responsive design */
           @media (min-width: 768px) {
-            .moxii-container {
+            .moxii-otp-container {
               max-width: 480px;
               margin: 0 auto;
               padding: 2rem 1.5rem;
             }
           }
           
-          /* Mobile optimization */
           @media (max-width: 767px) {
-            .moxii-container {
+            .moxii-otp-container {
               padding: 1rem;
             }
             
@@ -342,42 +275,13 @@ const MoxiiLayout = async ({request, context}) => {
             }
           }
         `}</style>
-        
-        {/* Phone input customization script */}
-        <script nonce={getKindeNonce()}>{`
-          document.addEventListener('DOMContentLoaded', function() {
-            // Find phone input field
-            const phoneInput = document.querySelector('input[type="tel"]');
-            if (phoneInput) {
-              // Set placeholder
-              phoneInput.setAttribute('placeholder', '000 000 0000');
-              
-              // Remove label
-              const label = phoneInput.closest('.kinde-field-wrapper')?.querySelector('label');
-              if (label) label.style.display = 'none';
-            }
-            
-            // Disable country selector
-            const countrySelect = document.querySelector('select[name*="country"], select[name*="phone_country"]');
-            if (countrySelect) {
-              countrySelect.disabled = true;
-              countrySelect.style.pointerEvents = 'none';
-              // Set to Australia (+61)
-              Array.from(countrySelect.options).forEach(opt => {
-                if (opt.value === 'AU' || opt.textContent.includes('+61')) {
-                  opt.selected = true;
-                }
-              });
-            }
-          });
-        `}</script>
       </head>
       <body>
-        <div className="moxii-container">
+        <div className="moxii-otp-container">
           <div className="moxii-header">
             <button 
-              className="moxii-back-button" 
-              type="button"
+              className="moxii-back-button"
+              type="button" 
               onclick="window.history.back()"
               aria-label="Go back"
             >
@@ -394,13 +298,19 @@ const MoxiiLayout = async ({request, context}) => {
           </div>
           
           <div className="moxii-content">
-            <h1 className="moxii-title">{context.widget.content.heading}</h1>
+            <h1 className="moxii-title">We sent you a six-digit code.</h1>
             {context.widget.content.description && (
               <p className="moxii-subtitle">{context.widget.content.description}</p>
             )}
             
             <div className="moxii-widget">
               {getKindeWidget()}
+              
+              <div className="moxii-resend-link">
+                <button type="button" onclick="window.location.reload()">
+                  Resend code
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -410,6 +320,6 @@ const MoxiiLayout = async ({request, context}) => {
 };
 
 export default async function Page(event) {
-  const page = await MoxiiLayout({...event});
+  const page = await MoxiiPhoneOTPPage({...event});
   return renderToString(page);
 }

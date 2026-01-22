@@ -76,10 +76,12 @@ const MoxiiOTPPage = async ({request, context}) => {
           
           .moxii-otp-container {
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 1.25rem;
             max-width: 100%;
+            position: relative;
           }
           
           .moxii-header {
@@ -103,6 +105,8 @@ const MoxiiOTPPage = async ({request, context}) => {
             flex: 1;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            min-height: 0;
           }
           
           .moxii-title {
@@ -121,9 +125,25 @@ const MoxiiOTPPage = async ({request, context}) => {
           }
           
           .moxii-widget {
-            flex: 1;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
+          }
+          
+          .moxii-widget form {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100dvh - 250px);
+          }
+          
+          .moxii-widget form > div:not(:last-child) {
+            flex: 0 0 auto;
+          }
+          
+          .moxii-widget form > div:last-child,
+          .moxii-widget form > button[type="submit"] {
+            margin-top: auto;
+            padding-top: 2rem;
           }
           
           /* OTP input specific styles */
@@ -242,8 +262,9 @@ const MoxiiOTPPage = async ({request, context}) => {
         <div className="moxii-otp-container">
           <div className="moxii-header">
             <button 
-              className="moxii-back-button" 
-              onClick="history.back()"
+              className="moxii-back-button"
+              type="button" 
+              onclick="window.history.back()"
               aria-label="Go back"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
