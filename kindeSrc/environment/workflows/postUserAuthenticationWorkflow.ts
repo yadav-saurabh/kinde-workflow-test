@@ -62,8 +62,9 @@ export default async function (event: onPostAuthenticationEvent) {
 
   try {
     const kindeAPI = await createKindeAPI(event);
+    console.log(clientId);
     const data = await kindeAPI.get({
-      endpoint: `applications/${encodeURIComponent(clientId)}/properties`,
+      endpoint: `applications/${clientId}/properties`,
     });
     console.log(data);
     // Extract application name from properties (prioritize explicit name over ID)
@@ -74,6 +75,7 @@ export default async function (event: onPostAuthenticationEvent) {
       "[Moxii] Failed to fetch application properties from Kinde API:",
       error,
     );
+    console.log(error);
     // Fall back to clientId if API call fails
   }
 
