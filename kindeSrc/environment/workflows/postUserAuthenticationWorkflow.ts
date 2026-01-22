@@ -15,16 +15,16 @@ import {
   WorkflowTrigger,
   onPostAuthenticationEvent,
   getEnvironmentVariable,
-  secureFetch,
+  fetch,
   createKindeAPI,
 } from "@kinde/infrastructure";
 
 export const workflowSettings: WorkflowSettings = {
   id: "postUserAuthentication",
-  name: "Post Authentication - Create/Update User in Moxii",
+  name: "Post Authentication - Create/Update User in database",
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
-    "kinde.secureFetch": {},
+    "kinde.fetch": {},
     "kinde.env": {},
     url: {},
   },
@@ -97,7 +97,7 @@ async function createStaffUser(
   apiBaseUrl: string,
   payload: Payload,
 ): Promise<void> {
-  const response = await secureFetch<{ error?: string }>(
+  const response = await fetch<{ error?: string }>(
     `${apiBaseUrl}/entities/staff/kinde`,
     {
       method: "POST",
@@ -119,7 +119,7 @@ async function createCustomerUser(
   console.log(payload);
   console.log(toURLSearchParams(payload));
   console.log(payload);
-  const response = await secureFetch<{ error?: string }>(
+  const response = await fetch<{ error?: string }>(
     `${apiBaseUrl}/customers/customers/kinde`,
     {
       method: "POST",
