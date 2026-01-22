@@ -4,15 +4,13 @@
  * This workflow runs during JWT token generation to add custom Moxii claims.
  * It's called EVERY time a token is generated (login, refresh, etc.).
  *
- * Flow:
- * 1. Kinde is generating a JWT token
- * 2. This workflow runs → Calls /auth/claims endpoint
- * 3. Entity/Customer service returns Moxii claims
- * 4. Claims are embedded in the JWT token
- * 5. User receives JWT with custom Moxii claims
- *
  * IMPORTANT: The user must already exist in the Moxii database
- * (created by post-authentication.ts workflow on first login)
+ * (created by post-authentication.ts workflow on first login).
+ *
+ * Features:
+ * - Gets application properties from Kinde Management API
+ * - Uses kp_app_name property for app name (if set)
+ * - Supports user_type parameter from auth URL (takes priority over app name)
  */
 
 import {
@@ -21,8 +19,8 @@ import {
   onUserTokenGeneratedEvent,
   getEnvironmentVariable,
   secureFetch,
+  createKindeAPI,
   accessTokenCustomClaims,
-  idTokenCustomClaims,
 } from "@kinde/infrastructure";
 
 export const workflowSettings: WorkflowSettings = {
@@ -32,131 +30,80 @@ export const workflowSettings: WorkflowSettings = {
   bindings: {
     "kinde.secureFetch": {},
     "kinde.env": {},
+    "kinde.fetch": {},
     "kinde.accessToken": {},
     "kinde.idToken": {},
     url: {},
   },
 };
 
-/**
- * Main workflow function
- */
-export default async function (event: onUserTokenGeneratedEvent) {
-  // TODO: remove after testing
-  console.log(event);
-  const userId = event.context.user.id;
+type KindeAppProperties = {
+  code: string;
+  message: string;
+  properties: Array<{
+    id: string;
+    key: string;
+    name: string;
+    value: string;
+    description: string;
+  }>;
+};
 
-  // Get organization code if user is part of an org
-  const orgCode = event.context.organization?.code;
-
-  // Get app name to determine which service to call
-  const appName = event.context.application?.clientId || "";
-
-  console.log(`[Moxii] Token generation workflow triggered:`, {
-    userId,
-    orgCode,
-    appName,
-  });
-
-  // Get API configuration
-  const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
-
-  if (!apiBaseUrl) {
-    console.error(
-      "[Moxii] Missing API configuration. Cannot add Moxii claims to token.",
-    );
-    throw new Error("Missing API configuration - cannot generate token");
-  }
-
+async function getAppNameFromKinde(
+  event: onUserTokenGeneratedEvent,
+  clientId: string,
+): Promise<string> {
   try {
-    // Determine user type and endpoint
-    const userType = determineUserType(appName);
+    const kindeAPI = await createKindeAPI(event);
+    const response: { data: KindeAppProperties } = await kindeAPI.get({
+      endpoint: `applications/${encodeURIComponent(clientId)}/properties`,
+    });
 
-    let claims;
-    if (userType === "STAFF") {
-      claims = await getStaffClaims(apiBaseUrl, userId, orgCode);
-    } else if (userType === "CUSTOMER") {
-      claims = await getCustomerClaims(apiBaseUrl, userId, orgCode);
-    } else {
-      console.error(`[Moxii] Unknown user type for app: ${appName}`);
-      throw new Error(`Unknown user type for app: ${appName}`);
+    if (response.data?.properties) {
+      const appNameProperty = response.data.properties.find(
+        (prop) => prop.key === "kp_app_name",
+      );
+      return appNameProperty?.value || clientId;
     }
 
-    if (!claims) {
-      console.error(`[Moxii] No claims returned from API`);
-      throw new Error("Failed to retrieve user claims from backend");
-    }
-
-    // Add Moxii claims to access token and ID token
-    const accessToken = accessTokenCustomClaims<typeof claims>();
-    const idToken = idTokenCustomClaims<typeof claims>();
-
-    Object.assign(accessToken, claims);
-    Object.assign(idToken, claims);
-
-    console.log(`[Moxii] Claims added to token:`, claims);
-  } catch (error) {
-    console.error("[Moxii] Error in token generation workflow:", error);
-    // Throw error to prevent token generation if claims cannot be retrieved
-    throw error;
+    throw new Error("kp_app_name not defined");
+  } catch {
+    return clientId;
   }
 }
 
-/**
- * Determine user type from Kinde application name
- */
-function determineUserType(appName: string): "STAFF" | "CUSTOMER" | "UNKNOWN" {
+type AppUserType = "STAFF" | "CUSTOMER";
+
+function determineUserType(appName: string): AppUserType | "UNKNOWN" {
   const lowerAppName = appName.toLowerCase();
 
-  if (
-    lowerAppName.includes("staff") ||
-    lowerAppName.includes("admin") ||
-    lowerAppName.includes("backoffice")
-  ) {
+  if (lowerAppName.includes("staff") || lowerAppName.includes("admin")) {
     return "STAFF";
   }
 
-  if (
-    lowerAppName.includes("customer") ||
-    lowerAppName.includes("client") ||
-    lowerAppName.includes("portal")
-  ) {
+  if (lowerAppName.includes("customer") || lowerAppName.includes("client")) {
     return "CUSTOMER";
   }
 
-  return "UNKNOWN";
+  throw new Error("unknown kp_app_name value");
 }
 
-/**
- * Convert object to URLSearchParams
- */
 function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
   const params = new URLSearchParams();
-
   Object.entries(obj).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       params.append(key, String(value));
     }
   });
-
   return params;
 }
 
-/**
- * Get claims for staff users from entity-service
- */
 async function getStaffClaims(
   apiBaseUrl: string,
   kindeUserId: string,
   orgCode?: string,
 ) {
-  console.log(`[Moxii] Getting STAFF claims:`, { kindeUserId, orgCode });
-
-  const payload = {
-    kindeUserId,
-    orgCode,
-  };
-
+  const payload = { kindeUserId, orgCode };
   const response = await secureFetch<{
     userId: string;
     userType: string;
@@ -168,37 +115,24 @@ async function getStaffClaims(
     permissions: string[];
   }>(`${apiBaseUrl}/entities/auth/claims`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: toURLSearchParams(payload),
     responseFormat: "json",
   });
 
   if (!response) {
-    console.error("[Moxii] Failed to get staff claims: No response");
     throw new Error("Failed to retrieve staff claims from backend");
   }
 
-  console.log(`[Moxii] Staff claims received:`, response);
   return response;
 }
 
-/**
- * Get claims for customer users from customer-service
- */
 async function getCustomerClaims(
   apiBaseUrl: string,
   kindeUserId: string,
   orgCode?: string,
 ) {
-  console.log(`[Moxii] Getting CUSTOMER claims:`, { kindeUserId, orgCode });
-
-  const payload = {
-    kindeUserId,
-    orgCode,
-  };
-
+  const payload = { kindeUserId, orgCode };
   const response = await secureFetch<{
     userId: string;
     userType: string;
@@ -209,18 +143,52 @@ async function getCustomerClaims(
     permissions: string[];
   }>(`${apiBaseUrl}/customers/auth/claims`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: toURLSearchParams(payload),
     responseFormat: "json",
   });
 
   if (!response) {
-    console.error("[Moxii] Failed to get customer claims: No response");
     throw new Error("Failed to retrieve customer claims from backend");
   }
 
-  console.log(`[Moxii] Customer claims received:`, response);
   return response;
+}
+
+export default async function (event: onUserTokenGeneratedEvent) {
+  const userId = event.context.user.id;
+  const orgCode = event.context.organization?.code;
+  const application = event.context.application;
+  const clientId = application?.clientId || "";
+
+  const appName = await getAppNameFromKinde(event, clientId);
+
+  const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
+  if (!apiBaseUrl) {
+    throw new Error("Missing API configuration");
+  }
+
+  let claims;
+  const userType = determineUserType(appName);
+
+  if (userType === "STAFF") {
+    claims = await getStaffClaims(apiBaseUrl, userId, orgCode);
+  } else if (userType === "CUSTOMER") {
+    claims = await getCustomerClaims(apiBaseUrl, userId, orgCode);
+  } else {
+    throw new Error(
+      `Unknown user type for app: ${appName}. Configure application property kp_app_name to 'staff' or 'customer'.`,
+    );
+  }
+
+  if (!claims) {
+    throw new Error("Failed to retrieve user claims from backend");
+  }
+
+  const accessToken = accessTokenCustomClaims<{
+    roles: string[];
+    permissions: string[];
+  }>();
+  accessToken.roles = claims.roles;
+  accessToken.permissions = claims.permissions;
 }
