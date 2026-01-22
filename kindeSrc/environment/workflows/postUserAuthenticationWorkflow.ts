@@ -15,7 +15,7 @@ import {
   WorkflowTrigger,
   onPostAuthenticationEvent,
   getEnvironmentVariable,
-  fetch,
+  secureFetch,
   createKindeAPI,
 } from "@kinde/infrastructure";
 
@@ -24,7 +24,7 @@ export const workflowSettings: WorkflowSettings = {
   name: "Post Authentication - Create/Update User in database",
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
-    "kinde.fetch": {},
+    "kinde.secureFetch": {},
     "kinde.env": {},
     url: {},
   },
@@ -97,7 +97,7 @@ async function createStaffUser(
   apiBaseUrl: string,
   payload: Payload,
 ): Promise<void> {
-  const response = await fetch<{ error?: string }>(
+  const response = await secureFetch<{ error?: string }>(
     `${apiBaseUrl}/entities/staff/kinde`,
     {
       method: "POST",
@@ -116,10 +116,7 @@ async function createCustomerUser(
   apiBaseUrl: string,
   payload: Payload,
 ): Promise<void> {
-  console.log(payload);
-  console.log(toURLSearchParams(payload));
-  console.log(payload);
-  const response = await fetch<{ error?: string }>(
+  const response = await secureFetch<{ error?: string }>(
     `${apiBaseUrl}/customers/customers/kinde`,
     {
       method: "POST",
