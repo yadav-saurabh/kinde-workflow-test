@@ -18,7 +18,7 @@ import {
   WorkflowTrigger,
   onUserTokenGeneratedEvent,
   getEnvironmentVariable,
-  secureFetch,
+  fetch,
   createKindeAPI,
   accessTokenCustomClaims,
 } from "@kinde/infrastructure";
@@ -28,7 +28,7 @@ export const workflowSettings: WorkflowSettings = {
   name: "Token Generation - Add Roles and Permissions to access token",
   trigger: WorkflowTrigger.UserTokenGeneration,
   bindings: {
-    "kinde.secureFetch": {},
+    "kinde.fetch": {},
     "kinde.env": {},
     "kinde.accessToken": {},
     "kinde.idToken": {},
@@ -103,7 +103,7 @@ async function getStaffClaims(
   orgCode?: string,
 ) {
   const payload = { kindeUserId, orgCode };
-  const response = await secureFetch<{
+  const response = await fetch<{
     userId: string;
     userType: string;
     tenantId: string;
@@ -132,7 +132,7 @@ async function getCustomerClaims(
   orgCode?: string,
 ) {
   const payload = { kindeUserId, orgCode };
-  const response = await secureFetch<{
+  const response = await fetch<{
     userId: string;
     userType: string;
     tenantId: string;
