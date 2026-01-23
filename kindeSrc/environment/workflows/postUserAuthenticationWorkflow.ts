@@ -24,7 +24,7 @@ export const workflowSettings: WorkflowSettings = {
   name: "Post Authentication - Create/Update User in database",
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
-    "kinde.fetch": {},
+    "kinde.fetch": {}, // TODO: use secureFetch when crypto/aes: invalid key size 0 is fixed by Kinde
     "kinde.env": {},
     url: {},
   },
@@ -102,7 +102,7 @@ async function createStaffUser(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: payload,
+      body: payload as unknown as URLSearchParams,
       responseFormat: "json",
     },
   );
@@ -121,7 +121,7 @@ async function createCustomerUser(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: payload,
+      body: payload as unknown as URLSearchParams,
       responseFormat: "json",
     },
   );

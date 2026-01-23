@@ -28,7 +28,7 @@ export const workflowSettings: WorkflowSettings = {
   name: "Token Generation - Add Roles and Permissions to access token",
   trigger: WorkflowTrigger.UserTokenGeneration,
   bindings: {
-    "kinde.fetch": {},
+    "kinde.fetch": {}, // TODO: use secureFetch when crypto/aes: invalid key size 0 is fixed by Kinde
     "kinde.env": {},
     "kinde.accessToken": {},
     "kinde.idToken": {},
@@ -114,8 +114,8 @@ async function getStaffClaims(
     permissions: string[];
   }>(`${apiBaseUrl}/entities/auth/claims`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: payload,
+    headers: { "Content-Type": "application/json" },
+    body: payload as unknown as URLSearchParams,
     responseFormat: "json",
   });
 
@@ -142,8 +142,8 @@ async function getCustomerClaims(
     permissions: string[];
   }>(`${apiBaseUrl}/customers/auth/claims`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: payload,
+    headers: { "Content-Type": "application/json" },
+    body: payload as unknown as URLSearchParams,
     responseFormat: "json",
   });
 
