@@ -101,8 +101,8 @@ async function createStaffUser(
     `${apiBaseUrl}/entities/staff/kinde`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: toURLSearchParams(payload),
+      headers: { "Content-Type": "application/json" },
+      body: payload,
       responseFormat: "json",
     },
   );
@@ -120,8 +120,8 @@ async function createCustomerUser(
     `${apiBaseUrl}/customers/customers/kinde`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: toURLSearchParams(payload),
+      headers: { "Content-Type": "application/json" },
+      body: payload,
       responseFormat: "json",
     },
   );

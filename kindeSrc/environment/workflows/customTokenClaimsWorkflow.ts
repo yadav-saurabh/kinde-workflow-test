@@ -115,7 +115,7 @@ async function getStaffClaims(
   }>(`${apiBaseUrl}/entities/auth/claims`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: toURLSearchParams(payload),
+    body: payload,
     responseFormat: "json",
   });
 
@@ -143,7 +143,7 @@ async function getCustomerClaims(
   }>(`${apiBaseUrl}/customers/auth/claims`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: toURLSearchParams(payload),
+    body: payload,
     responseFormat: "json",
   });
 
