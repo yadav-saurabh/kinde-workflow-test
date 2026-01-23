@@ -7,16 +7,15 @@ import {
   getKindeNonce,
   getKindeWidget,
   getKindeCSRF,
-  getLogoUrl,
   getSVGFaviconUrl,
   setKindeDesignerCustomProperties
 } from "@kinde/infrastructure";
 
 /**
- * Default Moxii authentication page
- * Matches the Zentara mobile app design system
+ * Moxii Login Page
+ * Matches the Figma design for phone number login
  */
-const MoxiiLayout = async ({request, context}) => {
+const MoxiiLoginPage = async ({request, context}) => {
   return (
     <html lang={request.locale.lang} dir={request.locale.isRtl ? "rtl" : "ltr"}>
       <head>
@@ -24,7 +23,7 @@ const MoxiiLayout = async ({request, context}) => {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="robots" content="noindex" />
         <meta name="csrf-token" content={getKindeCSRF()} />
-        <title>{context.widget.content.page_title}</title>
+        <title>Sign in - Moxii</title>
         
         <link rel="icon" href={getSVGFaviconUrl()} type="image/svg+xml" />
         {getKindeRequiredCSS()}
@@ -86,7 +85,7 @@ const MoxiiLayout = async ({request, context}) => {
           /* Main container */
           .moxii-container {
             min-height: 100vh;
-            min-height: 100dvh; /* Use dynamic viewport height for mobile */
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 1.25rem;
@@ -110,6 +109,7 @@ const MoxiiLayout = async ({request, context}) => {
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: background 0.2s;
           }
           
           .moxii-back-button:hover {
@@ -140,30 +140,40 @@ const MoxiiLayout = async ({request, context}) => {
             margin: 0 0 1.25rem 0;
           }
           
-          /* Widget wrapper */
+          /* Widget wrapper - ensure full height */
           .moxii-widget {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            flex: 1;
+            min-height: 0;
           }
           
-          /* Form wrapper to push button to bottom */
-          .moxii-widget form {
-            display: flex;
-            flex-direction: column;
-            min-height: calc(100dvh - 250px);
+          /* Kinde widget form - make it fill space */
+          [data-kinde-widget] form,
+          .moxii-widget form,
+          form[data-kinde-form] {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            min-height: 100% !important;
           }
           
-          /* Form fields wrapper */
-          .moxii-widget form > div:not(:last-child) {
+          /* Push button to bottom */
+          [data-kinde-widget] form button[type="submit"],
+          .moxii-widget form button[type="submit"],
+          form[data-kinde-form] button[type="submit"],
+          button[data-kinde-submit],
+          .kinde-button-primary,
+          button.kinde-button {
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+          }
+          
+          /* Form fields at top */
+          [data-kinde-widget] form > div:not(:has(button)),
+          .moxii-widget form > div:not(:has(button)) {
             flex: 0 0 auto;
-          }
-          
-          /* Button container pushed to bottom */
-          .moxii-widget form > div:last-child,
-          .moxii-widget form > button[type="submit"] {
-            margin-top: auto;
-            padding-top: 2rem;
+            margin-bottom: 1rem;
           }
           
           /* Primary button customization */
@@ -376,8 +386,8 @@ const MoxiiLayout = async ({request, context}) => {
         <div className="moxii-container">
           <div className="moxii-header">
             <button 
-              className="moxii-back-button" 
-              type="button"
+              className="moxii-back-button"
+              type="button" 
               onclick="window.history.back()"
               aria-label="Go back"
             >
@@ -394,10 +404,8 @@ const MoxiiLayout = async ({request, context}) => {
           </div>
           
           <div className="moxii-content">
-            <h1 className="moxii-title">{context.widget.content.heading}</h1>
-            {context.widget.content.description && (
-              <p className="moxii-subtitle">{context.widget.content.description}</p>
-            )}
+            <h1 className="moxii-title">Welcome back!</h1>
+            <p className="moxii-subtitle">Sign in to continue</p>
             
             <div className="moxii-widget">
               {getKindeWidget()}
@@ -410,6 +418,6 @@ const MoxiiLayout = async ({request, context}) => {
 };
 
 export default async function Page(event) {
-  const page = await MoxiiLayout({...event});
+  const page = await MoxiiLoginPage({...event});
   return renderToString(page);
 }

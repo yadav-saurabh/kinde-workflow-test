@@ -1,184 +1,388 @@
-'use server';
+"use server";
+import React from "react";
+import { renderToString } from "react-dom/server.browser";
+import {
+  getKindeRequiredCSS,
+  getKindeRequiredJS,
+  getKindeNonce,
+  getKindeWidget,
+  getKindeCSRF,
+  getSVGFaviconUrl,
+  setKindeDesignerCustomProperties
+} from "@kinde/infrastructure";
 
-import { getKindeRequiredCSS, getKindeWidget, type KindePageEvent } from '@kinde/infrastructure';
-import React from 'react';
-import { renderToString } from 'react-dom/server.browser';
-
-type PhoneOTPPageProps = KindePageEvent & { widget: React.ReactNode };
-
-const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget }) => {
-  const heading = context.widget.content.heading || "Welcome, let's start with your mobile number.";
-  
+/**
+ * Moxii Phone OTP Verification Page
+ * Matches the Figma design for code verification
+ */
+const MoxiiPhoneOTPPage = async ({request, context}) => {
   return (
-    <html lang={request.locale.lang} dir={request.locale.isRtl ? 'rtl' : 'ltr'}>
+    <html lang={request.locale.lang} dir={request.locale.isRtl ? "rtl" : "ltr"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <title>{context.widget.content.pageTitle}</title>
+        <meta name="robots" content="noindex" />
+        <meta name="csrf-token" content={getKindeCSRF()} />
+        <title>Enter verification code - Moxii</title>
+        
+        <link rel="icon" href={getSVGFaviconUrl()} type="image/svg+xml" />
         {getKindeRequiredCSS()}
-        <style>{`
+        {getKindeRequiredJS()}
+        
+        <style nonce={getKindeNonce()}>{`
+          :root {
+            ${setKindeDesignerCustomProperties({
+              baseBackgroundColor: "#F6EFE7",
+              baseLinkColor: "#2F7CF6",
+              buttonBorderRadius: "24px",
+              primaryButtonBackgroundColor: "#A64BFF",
+              primaryButtonColor: "#FFFFFF",
+              inputBorderRadius: "16px",
+              baseColor: "#1D1B1A",
+              baseFontFamily: "'Space Grotesk', sans-serif"
+            })}
+          }
+        `}</style>
+        
+        <style nonce={getKindeNonce()}>{`
+          @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+          
+          :root {
+            --moxii-canvas: #F6EFE7;
+            --moxii-ink: #1D1B1A;
+            --moxii-subtle: #6F6A64;
+            --moxii-muted: #B7B0A8;
+            --moxii-outline: #E1D7CC;
+            --moxii-primary: #A64BFF;
+            --moxii-primary-dark: #7B34E1;
+            --moxii-link: #2F7CF6;
+            --moxii-white: #FFFFFF;
+            --moxii-disabled: #D9D4CE;
+            --moxii-flag-red: #CF142B;
+          }
+          
           * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
           }
           
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-            background: #F6EFE7;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 0;
+          html, body {
             margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+            background: var(--moxii-canvas);
+            color: var(--moxii-ink);
           }
           
-          .container {
-            background: white;
-            flex: 1;
+          .moxii-otp-container {
+            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 20px 24px 0;
-            max-width: 480px;
-            width: 100%;
-            margin: 0 auto;
-            min-height: 100vh;
+            padding: 1.5rem 1.25rem;
+            max-width: 100%;
+            position: relative;
           }
           
-          .back-button {
-            background: none;
-            border: none;
-            color: #A64BFF;
-            font-size: 32px;
-            cursor: pointer;
-            padding: 8px;
-            margin: 0 0 24px -8px;
-            display: inline-flex;
+          .moxii-header {
+            margin-bottom: 1.5rem;
+          }
+          
+          .moxii-back-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid var(--moxii-outline);
+            background: var(--moxii-white);
+            display: flex;
             align-items: center;
-            line-height: 1;
-            font-weight: 300;
-            width: 40px;
-            height: 40px;
             justify-content: center;
-          }
-          
-          .back-button:active {
-            opacity: 0.6;
-          }
-          
-          .heading {
-            font-size: 26px;
-            font-weight: 600;
-            color: #1A1A2E;
-            margin-bottom: 32px;
-            line-height: 1.3;
-            letter-spacing: -0.3px;
-          }
-          
-          .widget-container {
-            width: 100%;
-            flex: 1;
-          }
-          
-          /* Custom styling for Kinde widget */
-          .widget-container input[type="tel"] {
-            font-size: 17px;
-            padding: 16px;
-            border: 1px solid #E0E0E0;
-            border-radius: 12px;
-            width: 100%;
-            font-family: inherit;
-            background: white;
-          }
-          
-          .widget-container input[type="tel"]:focus {
-            outline: none;
-            border-color: #A64BFF;
-            box-shadow: 0 0 0 3px rgba(107, 70, 255, 0.1);
-          }
-          
-          .widget-container button[type="submit"] {
-            background: #A64BFF;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 17px;
-            font-weight: 600;
-            width: 100%;
             cursor: pointer;
-            margin-top: 16px;
-            font-family: inherit;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             transition: background 0.2s;
           }
           
-          .widget-container button[type="submit"]:hover {
-            background: #7B34E1;
+          .moxii-back-button:hover {
+            background: var(--moxii-chip);
           }
           
-          .widget-container button[type="submit"]:active {
-            background: #7B34E1;
+          .moxii-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 0;
           }
           
-          .widget-container button[type="submit"]:disabled {
-            background: #E0E0E0;
-            color: #9E9E9E;
+          .moxii-title {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--moxii-ink);
+            margin: 0 0 0.5rem 0;
+          }
+          
+          .moxii-subtitle {
+            font-size: 14px;
+            line-height: 1.4;
+            color: var(--moxii-subtle);
+            margin: 0 0 1.25rem 0;
+          }
+          
+          .moxii-widget {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+          }
+          
+          /* Kinde widget form - make it fill space */
+          [data-kinde-widget] form,
+          .moxii-widget form,
+          form[data-kinde-form] {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            min-height: 100% !important;
+          }
+          
+          /* Push button to bottom */
+          [data-kinde-widget] form button[type="submit"],
+          .moxii-widget form button[type="submit"],
+          form[data-kinde-form] button[type="submit"],
+          button[data-kinde-submit],
+          .kinde-button-primary,
+          button.kinde-button {
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+          }
+          
+          /* Form fields at top */
+          [data-kinde-widget] form > div:not(:has(button)),
+          .moxii-widget form > div:not(:has(button)) {
+            flex: 0 0 auto;
+            margin-bottom: 1rem;
+          }
+          
+          /* OTP input specific styles - matches Figma */
+          input[data-kinde-otp-input],
+          input[type="text"][inputmode="numeric"],
+          input[type="tel"],
+          .kinde-otp-input input {
+            font-size: 24px !important;
+            font-weight: 500 !important;
+            letter-spacing: 0;
+            text-align: center;
+            border: 1px solid var(--moxii-outline) !important;
+            background: var(--moxii-white) !important;
+            border-radius: 12px !important;
+            padding: 16px 8px !important;
+            width: 48px !important;
+            height: 56px !important;
+            margin: 0 4px !important;
+          }
+          
+          input[data-kinde-otp-input]:focus,
+          input[type="text"][inputmode="numeric"]:focus,
+          .kinde-otp-input input:focus {
+            outline: none !important;
+            border-color: var(--moxii-primary) !important;
+            border-width: 2px !important;
+          }
+          
+          /* OTP container */
+          .kinde-otp-input-container,
+          [data-kinde-otp-container] {
+            display: flex !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            margin: 1rem 0 !important;
+          }
+          
+          /* Resend code link */
+          .moxii-resend-link {
+            text-align: center;
+            margin: 1.25rem 0;
+          }
+          
+          .moxii-resend-link button,
+          .moxii-resend-link a {
+            background: none;
+            border: none;
+            color: var(--moxii-link);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Space Grotesk', sans-serif;
+          }
+          
+          .moxii-resend-link button:hover,
+          .moxii-resend-link a:hover {
+            text-decoration: underline;
+          }
+          
+          /* Helper text */
+          .moxii-helper-text {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--moxii-muted);
+            margin-top: 0.75rem;
+          }
+          
+          /* Primary button */
+          button[type="submit"] {
+            width: 100%;
+            height: 48px;
+            border-radius: 24px;
+            background: var(--moxii-primary);
+            color: var(--moxii-white);
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+          }
+          
+          button[type="submit"]:hover:not(:disabled) {
+            background: var(--moxii-primary-dark);
+          }
+          
+          button[type="submit"]:disabled {
+            background: var(--moxii-disabled);
+            color: var(--moxii-subtle);
             cursor: not-allowed;
           }
           
-          /* Phone number input styling */
-          .widget-container .phone-input-wrapper {
-            position: relative;
-            margin-bottom: 16px;
+          /* Input field */
+          input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--moxii-outline);
+            background: var(--moxii-white);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--moxii-ink);
           }
           
-          .widget-container .country-code {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #1A1A2E;
-            font-size: 17px;
+          input[type="text"]::placeholder {
+            color: var(--moxii-muted);
+          }
+          
+          input[type="text"]:focus {
+            outline: none;
+            border-color: var(--moxii-primary);
+          }
+          
+          /* Error messages */
+          [role="alert"] {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(207, 20, 43, 0.1);
+            border: 1px solid rgba(207, 20, 43, 0.3);
+            color: var(--moxii-flag-red);
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
           }
           
-          .widget-container .flag {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
+          @media (min-width: 768px) {
+            .moxii-otp-container {
+              max-width: 480px;
+              margin: 0 auto;
+              padding: 2rem 1.5rem;
+            }
           }
           
-          @media (max-width: 480px) {
-            .container {
-              padding: 16px 20px 0;
+          @media (max-width: 767px) {
+            .moxii-otp-container {
+              padding: 1rem;
             }
             
-            .heading {
-              font-size: 24px;
-              margin-bottom: 28px;
-            }
-          }
-          
-          /* iOS style adjustments */
-          @supports (-webkit-touch-callout: none) {
-            .container {
-              padding-top: max(20px, env(safe-area-inset-top));
-              padding-bottom: env(safe-area-inset-bottom);
+            .moxii-title {
+              font-size: 18px;
             }
           }
         `}</style>
+        
+        {/* OTP input enhancement script */}
+        <script nonce={getKindeNonce()}>{`
+          document.addEventListener('DOMContentLoaded', function() {
+            // Find all OTP input fields
+            const otpInputs = document.querySelectorAll('input[inputmode="numeric"], input[data-kinde-otp-input]');
+            
+            otpInputs.forEach((input, index) => {
+              // Auto-focus next input on entry
+              input.addEventListener('input', function(e) {
+                if (this.value.length === 1 && index < otpInputs.length - 1) {
+                  otpInputs[index + 1].focus();
+                }
+              });
+              
+              // Handle backspace to go to previous input
+              input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                  otpInputs[index - 1].focus();
+                }
+              });
+              
+              // Clear on tap if filled
+              input.addEventListener('click', function() {
+                if (this.value) {
+                  this.select();
+                }
+              });
+            });
+            
+            // Auto-focus first input
+            if (otpInputs.length > 0) {
+              otpInputs[0].focus();
+            }
+          });
+        `}</script>
       </head>
       <body>
-        <div className="container" data-kinde-root="true">
-          <a className="back-button" href="/" aria-label="Go back">
-            ‹
-          </a>
-          <h1 className="heading">{heading}</h1>
-          <div className="widget-container">
-            {widget}
+        <div className="moxii-otp-container">
+          <div className="moxii-header">
+            <button 
+              className="moxii-back-button"
+              type="button" 
+              onclick="window.history.back()"
+              aria-label="Go back"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path 
+                  d="M12.5 15L7.5 10L12.5 5" 
+                  stroke="#A64BFF" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="moxii-content">
+            <h1 className="moxii-title">We sent you a six-digit code.</h1>
+            {context.widget.content.description && (
+              <p className="moxii-subtitle">{context.widget.content.description}</p>
+            )}
+            
+            <div className="moxii-widget">
+              {getKindeWidget()}
+              
+              <div className="moxii-resend-link">
+                <button type="button" onclick="window.location.reload()">
+                  Resend code
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </body>
@@ -186,8 +390,7 @@ const PhoneOTPPage: React.FC<PhoneOTPPageProps> = ({ context, request, widget })
   );
 };
 
-export default async function Page(event: KindePageEvent): Promise<string> {
-  const widget = await getKindeWidget();
-  const page = <PhoneOTPPage {...event} widget={widget} />;
+export default async function Page(event) {
+  const page = await MoxiiPhoneOTPPage({...event});
   return renderToString(page);
 }

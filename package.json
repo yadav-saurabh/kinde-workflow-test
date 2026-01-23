@@ -22,10 +22,6 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.3",
-    "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.52.0",
-    "@typescript-eslint/parser": "^8.52.0",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3"
+    "@types/react-dom": "^19.2.3"
   }
 }
