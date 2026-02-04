@@ -98,7 +98,7 @@ async function createStaffUser(
   payload: Payload,
 ): Promise<void> {
   const response = await fetch<{ error?: string }>(
-    `${apiBaseUrl}/entities/staff/kinde`,
+    `${apiBaseUrl}/entities/auth/post-authentication`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,7 +117,7 @@ async function createCustomerUser(
   payload: Payload,
 ): Promise<void> {
   const response = await fetch<{ error?: string }>(
-    `${apiBaseUrl}/customers/customers/kinde`,
+    `${apiBaseUrl}/customers/auth/post-authentication`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
