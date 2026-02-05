@@ -106,11 +106,10 @@ async function getOrgExternalId(
 ): Promise<string | undefined> {
   try {
     const kindeAPI = await createKindeAPI(event);
-    const response: { data: { code: string; external_id?: string } } = await kindeAPI.get(
-      {
+    const response: { data: { code: string; external_id?: string } } =
+      await kindeAPI.get({
         endpoint: `organization?code=${orgCode}`,
-      },
-    );
+      });
 
     return response.data.external_id;
   } catch (e) {
@@ -133,16 +132,6 @@ function determineUserType(appName: string): AppUserType | "UNKNOWN" {
   }
 
   throw new Error("unknown kp_app_name value");
-}
-
-function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
-  const params = new URLSearchParams();
-  Object.entries(obj).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      params.append(key, String(value));
-    }
-  });
-  return params;
 }
 
 async function getStaffClaims(
@@ -241,9 +230,23 @@ export default async function (event: onUserTokenGeneratedEvent) {
   const userType = determineUserType(appName);
 
   if (userType === "STAFF") {
-    claims = await getStaffClaims(apiBaseUrl, userId, orgCode, email, phone, orgExternalId);
+    claims = await getStaffClaims(
+      apiBaseUrl,
+      userId,
+      orgCode,
+      email,
+      phone,
+      orgExternalId,
+    );
   } else if (userType === "CUSTOMER") {
-    claims = await getCustomerClaims(apiBaseUrl, userId, orgCode, email, phone, orgExternalId);
+    claims = await getCustomerClaims(
+      apiBaseUrl,
+      userId,
+      orgCode,
+      email,
+      phone,
+      orgExternalId,
+    );
   } else {
     throw new Error(
       `Unknown user type for app: ${appName}. Configure application property kp_app_name to 'staff' or 'customer'.`,
@@ -255,9 +258,7 @@ export default async function (event: onUserTokenGeneratedEvent) {
   }
 
   const accessToken = accessTokenCustomClaims<{
-    roles: string[];
-    permissions: string[];
+    user: typeof claims;
   }>();
-  accessToken.roles = claims.roles;
-  accessToken.permissions = claims.permissions;
+  accessToken.user = claims;
 }
