@@ -163,7 +163,8 @@ async function getStaffClaims(
     throw new Error("Failed to retrieve staff claims from backend");
   }
 
-  return response;
+  // Unwrap data if wrapped (e.g. by NestJS interceptors)
+  return (response as any).data || response;
 }
 
 async function getCustomerClaims(
@@ -194,7 +195,8 @@ async function getCustomerClaims(
     throw new Error("Failed to retrieve customer claims from backend");
   }
 
-  return response;
+  // Unwrap data if wrapped (e.g. by NestJS interceptors)
+  return (response as any).data || response;
 }
 
 export default async function (event: onUserTokenGeneratedEvent) {
