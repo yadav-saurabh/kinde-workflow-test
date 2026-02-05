@@ -42,6 +42,15 @@ type KindeAppProperties = {
   }>;
 };
 
+type KindeUser = {
+  id: string;
+  email?: string;
+  preferred_email?: string;
+  phone_number?: string;
+  first_name?: string;
+  last_name?: string;
+};
+
 async function getAppNameFromKinde(
   event: onPostAuthenticationEvent,
   clientId: string,
@@ -62,6 +71,45 @@ async function getAppNameFromKinde(
     throw new Error("kp_app_name not defined");
   } catch {
     return clientId;
+  }
+}
+
+async function getUserDetails(
+  event: onPostAuthenticationEvent,
+  userId: string,
+): Promise<{ email?: string; phone?: string } | undefined> {
+  try {
+    const kindeAPI = await createKindeAPI(event);
+    const response: { data: KindeUser } = await kindeAPI.get({
+      endpoint: `user?id=${userId}`,
+    });
+
+    return {
+      email: response.data.email || response.data.preferred_email,
+      phone: response.data.phone_number,
+    };
+  } catch (e) {
+    console.error("Failed to fetch user details", e);
+    return undefined;
+  }
+}
+
+async function getOrgExternalId(
+  event: onPostAuthenticationEvent,
+  orgCode: string,
+): Promise<string | undefined> {
+  try {
+    const kindeAPI = await createKindeAPI(event);
+    const response: { data: { code: string; external_id?: string } } = await kindeAPI.get(
+      {
+        endpoint: `organization?code=${orgCode}`,
+      },
+    );
+
+    return response.data.external_id;
+  } catch (e) {
+    console.error("Failed to fetch org external ID", e);
+    return undefined;
   }
 }
 
@@ -91,7 +139,13 @@ function toURLSearchParams(obj: Record<string, unknown>): URLSearchParams {
   return params;
 }
 
-type Payload = { kindeUserId; orgCode };
+type Payload = {
+  kindeUserId: string;
+  orgCode: string;
+  email?: string;
+  phone?: string;
+  orgExternalId?: string;
+};
 
 async function createStaffUser(
   apiBaseUrl: string,
@@ -143,6 +197,22 @@ export default async function (event: onPostAuthenticationEvent) {
   const application = event.context.application;
   const clientId = application?.clientId || "";
 
+  let email: string | undefined;
+  let phone: string | undefined;
+
+  try {
+    const userDetails = await getUserDetails(event, userId);
+    email = userDetails?.email;
+    phone = userDetails?.phone;
+  } catch (e) {
+    console.warn("Could not fetch user details", e);
+  }
+
+  let orgExternalId;
+  if (orgCode) {
+    orgExternalId = await getOrgExternalId(event, orgCode);
+  }
+
   const appName = await getAppNameFromKinde(event, clientId);
 
   const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
@@ -153,9 +223,9 @@ export default async function (event: onPostAuthenticationEvent) {
   const userType = determineUserType(appName);
 
   if (userType === "STAFF") {
-    await createStaffUser(apiBaseUrl, { kindeUserId: userId, orgCode });
+    await createStaffUser(apiBaseUrl, { kindeUserId: userId, orgCode, email, phone, orgExternalId });
   } else if (userType === "CUSTOMER") {
-    await createCustomerUser(apiBaseUrl, { kindeUserId: userId, orgCode });
+    await createCustomerUser(apiBaseUrl, { kindeUserId: userId, orgCode, email, phone, orgExternalId });
   } else {
     throw new Error(
       `Unknown user type for app: ${appName}. Configure application property kp_app_name to 'staff' or 'customer'.`,
