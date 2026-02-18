@@ -1,13 +1,12 @@
 /**
  * Kinde Post-Authentication Workflow
  *
- * This workflow runs AFTER a user successfully authenticates with Kinde.
- * It creates/updates a user in your Moxii database (Staff or Customer).
+ * Runs AFTER a user successfully authenticates with Kinde.
+ * Creates a user in the Moxii database (Staff or Customer).
  *
- * Features:
- * - Gets application properties from Kinde Management API
- * - Uses kp_app_name property for app name (if set)
- * - Supports user_type parameter from auth URL (takes priority over app name)
+ * Sends kindeUserId, orgCode, orgExternalId, AND user profile details
+ * (email, phone, firstName, lastName) to the backend so the customer
+ * record is seeded with Kinde registration data on first login.
  */
 
 import {
@@ -44,9 +43,8 @@ type KindeAppProperties = {
 
 type KindeUser = {
   id: string;
-  email?: string;
   preferred_email?: string;
-  phone_number?: string;
+  phone?: string;
   first_name?: string;
   last_name?: string;
 };
@@ -77,7 +75,10 @@ async function getAppNameFromKinde(
 async function getUserDetails(
   event: onPostAuthenticationEvent,
   userId: string,
-): Promise<{ email?: string; phone?: string } | undefined> {
+): Promise<
+  | { email?: string; phone?: string; firstName?: string; lastName?: string }
+  | undefined
+> {
   try {
     const kindeAPI = await createKindeAPI(event);
     const response: { data: KindeUser } = await kindeAPI.get({
@@ -85,11 +86,13 @@ async function getUserDetails(
     });
 
     return {
-      email: response.data.email || response.data.preferred_email,
-      phone: response.data.phone_number,
+      email: response.data.preferred_email,
+      phone: response.data.phone,
+      firstName: response.data.first_name,
+      lastName: response.data.last_name,
     };
   } catch (e) {
-    console.error("Failed to fetch user details", e);
+    console.error("[Moxii] Failed to fetch user details", e);
     return undefined;
   }
 }
@@ -131,9 +134,11 @@ function determineUserType(appName: string): AppUserType | "UNKNOWN" {
 type Payload = {
   kindeUserId: string;
   orgCode: string;
+  orgExternalId?: string;
   email?: string;
   phone?: string;
-  orgExternalId?: string;
+  firstName?: string;
+  lastName?: string;
 };
 
 async function createStaffUser(
@@ -186,15 +191,20 @@ export default async function (event: onPostAuthenticationEvent) {
   const application = event.context.application;
   const clientId = application?.clientId || "";
 
+  // Fetch user profile from Kinde Management API
   let email: string | undefined;
   let phone: string | undefined;
+  let firstName: string | undefined;
+  let lastName: string | undefined;
 
   try {
     const userDetails = await getUserDetails(event, userId);
     email = userDetails?.email;
     phone = userDetails?.phone;
+    firstName = userDetails?.firstName;
+    lastName = userDetails?.lastName;
   } catch (e) {
-    console.warn("Could not fetch user details", e);
+    console.warn("[Moxii] Could not fetch user details", e);
   }
 
   let orgExternalId;
@@ -210,23 +220,20 @@ export default async function (event: onPostAuthenticationEvent) {
   }
 
   const userType = determineUserType(appName);
+  const payload: Payload = {
+    kindeUserId: userId,
+    orgCode,
+    orgExternalId,
+    email,
+    phone,
+    firstName,
+    lastName,
+  };
 
   if (userType === "STAFF") {
-    await createStaffUser(apiBaseUrl, {
-      kindeUserId: userId,
-      orgCode,
-      email,
-      phone,
-      orgExternalId,
-    });
+    await createStaffUser(apiBaseUrl, payload);
   } else if (userType === "CUSTOMER") {
-    await createCustomerUser(apiBaseUrl, {
-      kindeUserId: userId,
-      orgCode,
-      email,
-      phone,
-      orgExternalId,
-    });
+    await createCustomerUser(apiBaseUrl, payload);
   } else {
     throw new Error(
       `Unknown user type for app: ${appName}. Configure application property kp_app_name to 'staff' or 'customer'.`,
