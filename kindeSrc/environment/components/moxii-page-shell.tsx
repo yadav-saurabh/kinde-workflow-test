@@ -12,8 +12,6 @@ import {
 } from "@kinde/infrastructure";
 import { moxiiDesignerCustomProperties } from "../styles/moxii";
 
-const MOXII_UI_VERSION = "UI v2026.02.25.4";
-
 type MoxiiPageShellProps = {
   request: { locale: { lang: string; isRtl: boolean } };
   title: string;
@@ -63,24 +61,6 @@ export const MoxiiPageShell = ({
       </head>
       <body>
         <div className={containerClassName}>
-          <div
-            style={{
-              position: "fixed",
-              right: "12px",
-              top: "12px",
-              zIndex: 9999,
-              background: "rgba(0,0,0,0.65)",
-              color: "#fff",
-              borderRadius: "999px",
-              padding: "4px 8px",
-              fontSize: "11px",
-              lineHeight: 1.2,
-              fontWeight: 600,
-              letterSpacing: "0.02em",
-            }}
-          >
-            {MOXII_UI_VERSION}
-          </div>
           <div className="moxii-content">
             <h1 className="moxii-title">{heading}</h1>
             {description ? <p className="moxii-subtitle">{description}</p> : null}
