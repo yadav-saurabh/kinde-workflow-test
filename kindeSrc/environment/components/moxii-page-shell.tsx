@@ -12,7 +12,7 @@ import {
 } from "@kinde/infrastructure";
 import { moxiiDesignerCustomProperties } from "../styles/moxii";
 
-const MOXII_UI_VERSION = "UI v2026.02.25.3";
+const MOXII_UI_VERSION = "UI v2026.02.25.4";
 
 type MoxiiPageShellProps = {
   request: { locale: { lang: string; isRtl: boolean } };

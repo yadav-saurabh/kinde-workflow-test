@@ -375,7 +375,6 @@ export const moxiiOtpStyles = `
   .moxii-otp-container {
     min-height: 100vh;
     min-height: 100dvh;
-    height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 1.5rem 1.25rem;
@@ -385,7 +384,6 @@ export const moxiiOtpStyles = `
 
   .moxii-content {
     flex: 1;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -412,70 +410,6 @@ export const moxiiOtpStyles = `
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
-    /* Reserve room for fixed bottom stack (button + resend + branding). */
-    padding-bottom: 190px;
-  }
-
-  /* Ensure Kinde widget root can distribute top fields and bottom actions */
-  [data-kinde-widget] {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    height: 100% !important;
-  }
-
-  [data-kinde-widget] > * {
-    width: 100%;
-  }
-
-  /* Kinde widget form - make it fill space */
-  [data-kinde-widget] form,
-  .moxii-widget form,
-  form[data-kinde-form] {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 1 auto !important;
-    min-height: 100% !important;
-    height: 100% !important;
-  }
-
-  /* Push button to bottom */
-  [data-kinde-widget] form button[type="submit"],
-  .moxii-widget form button[type="submit"],
-  form[data-kinde-form] button[type="submit"],
-  button[data-kinde-submit],
-  .kinde-button-primary,
-  button.kinde-button {
-    margin-top: auto !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* Form fields at top */
-  [data-kinde-widget] form > div:not(:has(button)),
-  .moxii-widget form > div:not(:has(button)) {
-    flex: 0 0 auto;
-    margin-bottom: 1rem;
-  }
-
-  /* Action/footer wrappers should sit at the bottom */
-  [data-kinde-widget] form [class*="footer"],
-  [data-kinde-widget] form [class*="actions"],
-  [data-kinde-widget] form [data-kinde-footer],
-  [data-kinde-widget] form [data-kinde-actions] {
-    margin-top: auto !important;
-  }
-
-  /* Keep footer stack near the bottom with sensible spacing */
-  [data-kinde-widget] [data-kinde-fallback-action],
-  [data-kinde-widget] [class*="fallback-action"] {
-    margin-top: 0.75rem !important;
-  }
-
-  [data-kinde-widget] [data-kinde-branding],
-  [data-kinde-widget] [class*="branding"] {
-    margin-top: 0.75rem !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
   }
 
   /* OTP input specific styles - matches Figma */
