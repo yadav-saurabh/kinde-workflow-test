@@ -375,6 +375,7 @@ export const moxiiOtpStyles = `
   .moxii-otp-container {
     min-height: 100vh;
     min-height: 100dvh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 1.5rem 1.25rem;
@@ -384,6 +385,7 @@ export const moxiiOtpStyles = `
 
   .moxii-content {
     flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -408,8 +410,21 @@ export const moxiiOtpStyles = `
   .moxii-widget {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
+  }
+
+  /* Ensure Kinde widget root can distribute top fields and bottom actions */
+  [data-kinde-widget] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  [data-kinde-widget] > * {
+    width: 100%;
   }
 
   /* Kinde widget form - make it fill space */
@@ -418,8 +433,9 @@ export const moxiiOtpStyles = `
   form[data-kinde-form] {
     display: flex !important;
     flex-direction: column !important;
-    flex: 1 !important;
+    flex: 1 1 auto !important;
     min-height: 100% !important;
+    height: 100% !important;
   }
 
   /* Push button to bottom */
@@ -446,6 +462,18 @@ export const moxiiOtpStyles = `
   [data-kinde-widget] form [data-kinde-footer],
   [data-kinde-widget] form [data-kinde-actions] {
     margin-top: auto !important;
+  }
+
+  /* Keep footer stack near the bottom with sensible spacing */
+  [data-kinde-widget] [data-kinde-fallback-action],
+  [data-kinde-widget] [class*="fallback-action"] {
+    margin-top: 0.75rem !important;
+  }
+
+  [data-kinde-widget] [data-kinde-branding],
+  [data-kinde-widget] [class*="branding"] {
+    margin-top: 0.75rem !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
   }
 
   /* OTP input specific styles - matches Figma */

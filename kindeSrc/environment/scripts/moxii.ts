@@ -47,6 +47,31 @@ export const moxiiAuthScript = `
 
 export const moxiiOtpScript = `
   document.addEventListener('DOMContentLoaded', function() {
+    const ensureFlexColumn = (node, grow) => {
+      if (!node) return;
+      node.style.display = 'flex';
+      node.style.flexDirection = 'column';
+      node.style.minHeight = '0';
+      if (grow) {
+        node.style.flex = '1 1 auto';
+      }
+    };
+
+    const ensureWidgetHeight = () => {
+      const content = document.querySelector('.moxii-content');
+      const widget = document.querySelector('.moxii-widget');
+      if (!content || !widget) return;
+
+      const contentRect = content.getBoundingClientRect();
+      const widgetRect = widget.getBoundingClientRect();
+      const available = Math.floor(contentRect.bottom - widgetRect.top);
+
+      if (available > 0) {
+        widget.style.minHeight = available + 'px';
+        widget.style.height = available + 'px';
+      }
+    };
+
     const getOtpInputs = () =>
       Array.from(
         document.querySelectorAll('input[inputmode="numeric"], input[data-kinde-otp-input]')
@@ -116,12 +141,22 @@ export const moxiiOtpScript = `
       );
       submitButtons.forEach((button) => {
         const form = button.closest('form');
+        const widgetRoot = button.closest('[data-kinde-widget]');
+        const moxiiWidget = document.querySelector('.moxii-widget');
+
+        ensureFlexColumn(moxiiWidget, true);
+        ensureFlexColumn(widgetRoot, true);
+
+        let widgetAncestor = widgetRoot ? widgetRoot.parentElement : null;
+        for (let i = 0; i < 5 && widgetAncestor && widgetAncestor !== moxiiWidget; i += 1) {
+          ensureFlexColumn(widgetAncestor, true);
+          widgetAncestor = widgetAncestor.parentElement;
+        }
+
         if (form) {
-          form.style.display = 'flex';
-          form.style.flexDirection = 'column';
+          ensureFlexColumn(form, true);
           form.style.minHeight = '100%';
           form.style.height = '100%';
-          form.style.flex = '1 1 auto';
         }
 
         const actionWrapper =
@@ -129,10 +164,10 @@ export const moxiiOtpScript = `
           button.parentElement;
 
         if (actionWrapper) {
-          actionWrapper.style.display = 'flex';
-          actionWrapper.style.flexDirection = 'column';
+          ensureFlexColumn(actionWrapper, false);
           actionWrapper.style.width = '100%';
           actionWrapper.style.marginTop = 'auto';
+          actionWrapper.style.paddingBottom = '0.5rem';
         }
 
         button.style.display = 'block';
@@ -141,11 +176,7 @@ export const moxiiOtpScript = `
 
         let node = actionWrapper ? actionWrapper.parentElement : button.parentElement;
         for (let i = 0; i < 5 && node && node !== form; i += 1) {
-          if (!node.style.display || node.style.display === 'block') {
-            node.style.display = 'flex';
-            node.style.flexDirection = 'column';
-          }
-          node.style.flex = '1 1 auto';
+          ensureFlexColumn(node, true);
           node.style.width = '100%';
           node = node.parentElement;
         }
@@ -153,6 +184,7 @@ export const moxiiOtpScript = `
     };
 
     const applyWidgetFixes = () => {
+      ensureWidgetHeight();
       enhanceOtpInputs();
       flattenInputWrappers();
       pinSubmitToBottom();
@@ -189,5 +221,6 @@ export const moxiiOtpScript = `
     observer.observe(document.body, { childList: true, subtree: true });
 
     setTimeout(() => observer.disconnect(), 5000);
+    window.addEventListener('resize', applyWidgetFixes);
   });
 `;
