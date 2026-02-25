@@ -80,17 +80,21 @@ export const moxiiOtpScript = `
       );
     };
 
-    const setPinnedStyle = (el, bottomPx, zIndex, centeredText) => {
-      if (!el) return;
-      el.style.position = 'fixed';
-      el.style.left = '50%';
-      el.style.transform = 'translateX(-50%)';
-      el.style.width = 'min(calc(100vw - 2.5rem), 27.5rem)';
-      el.style.maxWidth = '27.5rem';
-      el.style.bottom = bottomPx + 'px';
-      el.style.zIndex = String(zIndex);
+    const moveNodeToDock = (node, dock, centeredText) => {
+      if (!node || !dock) return;
+      if (node.parentElement !== dock) {
+        dock.appendChild(node);
+      }
+
+      node.style.position = 'static';
+      node.style.left = 'auto';
+      node.style.right = 'auto';
+      node.style.bottom = 'auto';
+      node.style.transform = 'none';
+      node.style.width = '100%';
+      node.style.maxWidth = '100%';
       if (centeredText) {
-        el.style.textAlign = 'center';
+        node.style.textAlign = 'center';
       }
     };
 
@@ -113,30 +117,55 @@ export const moxiiOtpScript = `
     const pinBottomStack = () => {
       const keyboardInset = getKeyboardInset();
       const widget = document.querySelector('.moxii-widget');
-      if (widget) {
-        widget.style.paddingBottom = (210 + keyboardInset) + 'px';
+      if (!widget) return;
+
+      widget.style.position = 'relative';
+      widget.style.paddingBottom = (250 + keyboardInset) + 'px';
+
+      let dock = widget.querySelector('[data-moxii-bottom-dock]');
+      if (!dock) {
+        dock = document.createElement('div');
+        dock.setAttribute('data-moxii-bottom-dock', 'true');
+        widget.appendChild(dock);
       }
+
+      dock.style.position = 'absolute';
+      dock.style.left = '0';
+      dock.style.right = '0';
+      dock.style.bottom = (14 + keyboardInset) + 'px';
+      dock.style.display = 'flex';
+      dock.style.flexDirection = 'column';
+      dock.style.gap = '12px';
+      dock.style.width = '100%';
+      dock.style.zIndex = '60';
+      dock.style.pointerEvents = 'auto';
 
       const primaryAction = findPrimaryActionElement();
       if (primaryAction) {
-        // Pin the action wrapper when available to avoid Kinde internal layout clashes.
+        const form = primaryAction.closest('form');
+        if (form) {
+          if (!form.id) {
+            form.id = 'moxii-kinde-form';
+          }
+          primaryAction.setAttribute('form', form.id);
+        }
+
         const actionWrapper =
           primaryAction.closest('[class*="footer"], [class*="actions"], [data-kinde-footer], [data-kinde-actions]') ||
           primaryAction;
-        setPinnedStyle(actionWrapper, 138 + keyboardInset, 40, false);
-        actionWrapper.style.display = 'block';
+        moveNodeToDock(actionWrapper, dock, false);
       }
 
       const fallbackActions = document.querySelectorAll(
         '[data-kinde-fallback-action], [class*="fallback-action"]'
       );
       fallbackActions.forEach((el) => {
-        setPinnedStyle(el, 72 + keyboardInset, 30, true);
+        moveNodeToDock(el, dock, true);
       });
 
       const brandings = document.querySelectorAll('[data-kinde-branding], [class*="branding"]');
       brandings.forEach((el) => {
-        setPinnedStyle(el, 22 + keyboardInset, 20, true);
+        moveNodeToDock(el, dock, true);
       });
     };
 
