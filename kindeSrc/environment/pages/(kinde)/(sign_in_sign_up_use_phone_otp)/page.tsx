@@ -84,28 +84,6 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
             position: relative;
           }
           
-          .moxii-header {
-            margin-bottom: 1.5rem;
-          }
-          
-          .moxii-back-button {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 1px solid var(--moxii-outline);
-            background: var(--moxii-white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            transition: background 0.2s;
-          }
-          
-          .moxii-back-button:hover {
-            background: var(--moxii-chip);
-          }
-          
           .moxii-content {
             flex: 1;
             display: flex;
@@ -168,34 +146,38 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
           input[data-kinde-otp-input],
           input[type="text"][inputmode="numeric"],
           input[type="tel"],
+          input[name*="code"],
+          input[id*="code"],
           .kinde-otp-input input {
             font-size: 24px !important;
             font-weight: 500 !important;
-            letter-spacing: 0;
-            text-align: center;
-            border: 1px solid var(--moxii-outline) !important;
-            background: var(--moxii-white) !important;
-            border-radius: 12px !important;
-            padding: 16px 8px !important;
-            width: 48px !important;
-            height: 56px !important;
-            margin: 0 4px !important;
+            letter-spacing: 0 !important;
+            text-align: left !important;
+            border: none !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            padding: 8px 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            box-shadow: none !important;
           }
           
           input[data-kinde-otp-input]:focus,
           input[type="text"][inputmode="numeric"]:focus,
+          input[name*="code"]:focus,
+          input[id*="code"]:focus,
           .kinde-otp-input input:focus {
             outline: none !important;
-            border-color: var(--moxii-primary) !important;
-            border-width: 2px !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
           }
           
           /* OTP container */
           .kinde-otp-input-container,
           [data-kinde-otp-container] {
-            display: flex !important;
-            justify-content: center !important;
-            gap: 8px !important;
+            display: block !important;
+            width: 100% !important;
             margin: 1rem 0 !important;
           }
           
@@ -258,14 +240,15 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
           /* Input field */
           input[type="text"] {
             width: 100%;
-            padding: 14px 16px;
-            border-radius: 16px;
-            border: 1px solid var(--moxii-outline);
-            background: var(--moxii-white);
+            padding: 8px 0;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 16px;
+            font-size: 24px;
             font-weight: 500;
             color: var(--moxii-ink);
+            box-shadow: none !important;
           }
           
           input[type="text"]::placeholder {
@@ -273,8 +256,9 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
           }
           
           input[type="text"]:focus {
-            outline: none;
-            border-color: var(--moxii-primary);
+            outline: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
           }
           
           /* Error messages */
@@ -344,30 +328,30 @@ const MoxiiPhoneOTPPage = async ({request, context}) => {
             if (otpInputs.length > 0) {
               otpInputs[0].focus();
             }
+
+            // Kinde wraps inputs with its own containers; flatten those styles
+            // so the field renders like the Flutter screens.
+            const flattenInputWrappers = () => {
+              const inputs = document.querySelectorAll(
+                'input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[inputmode="numeric"]'
+              );
+              inputs.forEach((input) => {
+                let node = input.parentElement;
+                for (let i = 0; i < 4 && node; i += 1) {
+                  node.style.border = 'none';
+                  node.style.background = 'transparent';
+                  node.style.boxShadow = 'none';
+                  node.style.padding = '0';
+                  node = node.parentElement;
+                }
+              });
+            };
+            flattenInputWrappers();
           });
         `}</script>
       </head>
       <body>
         <div className="moxii-otp-container">
-          <div className="moxii-header">
-            <button 
-              className="moxii-back-button"
-              type="button" 
-              onclick="window.history.back()"
-              aria-label="Go back"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path 
-                  d="M12.5 15L7.5 10L12.5 5" 
-                  stroke="#A64BFF" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-          
           <div className="moxii-content">
             <h1 className="moxii-title">We sent you a six-digit code.</h1>
             {context.widget.content.description && (

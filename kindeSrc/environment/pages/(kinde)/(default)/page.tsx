@@ -94,28 +94,6 @@ const MoxiiLayout = async ({request, context}) => {
             position: relative;
           }
           
-          /* Header with back button */
-          .moxii-header {
-            margin-bottom: 1.5rem;
-          }
-          
-          .moxii-back-button {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 1px solid var(--moxii-outline);
-            background: var(--moxii-white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-          }
-          
-          .moxii-back-button:hover {
-            background: var(--moxii-chip);
-          }
-          
           /* Content area */
           .moxii-content {
             flex: 1;
@@ -195,55 +173,61 @@ const MoxiiLayout = async ({request, context}) => {
           }
           
           /* Input field customization */
-          input[type="text"],
-          input[type="tel"],
-          input[type="email"],
-          input[type="password"] {
+          [data-kinde-widget] input[type="text"],
+          [data-kinde-widget] input[type="tel"],
+          [data-kinde-widget] input[type="email"],
+          [data-kinde-widget] input[type="password"] {
             width: 100%;
-            padding: 14px 16px;
-            border-radius: 16px;
-            border: 1px solid var(--moxii-outline);
-            background: var(--moxii-white);
+            padding: 8px 0;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 16px;
+            font-size: 24px;
             font-weight: 500;
             color: var(--moxii-ink);
           }
           
           /* Phone input specific - no border */
-          input[type="tel"] {
-            border: none;
+          [data-kinde-widget] input[type="tel"] {
             padding-left: 0;
-            background: transparent;
             font-size: 28px;
             font-weight: 400;
             letter-spacing: 0.5px;
           }
           
-          input[type="text"]::placeholder,
-          input[type="tel"]::placeholder,
-          input[type="email"]::placeholder,
-          input[type="password"]::placeholder {
+          [data-kinde-widget] input[type="text"]::placeholder,
+          [data-kinde-widget] input[type="tel"]::placeholder,
+          [data-kinde-widget] input[type="email"]::placeholder,
+          [data-kinde-widget] input[type="password"]::placeholder {
             color: var(--moxii-muted);
           }
           
           /* Phone placeholder with lighter color */
-          input[type="tel"]::placeholder {
+          [data-kinde-widget] input[type="tel"]::placeholder {
             color: #D9D4CE;
             font-weight: 300;
           }
           
-          input[type="text"]:focus,
-          input[type="tel"]:focus,
-          input[type="email"]:focus,
-          input[type="password"]:focus {
-            outline: none;
-            border-color: var(--moxii-primary);
+          [data-kinde-widget] input[type="text"]:focus,
+          [data-kinde-widget] input[type="tel"]:focus,
+          [data-kinde-widget] input[type="email"]:focus,
+          [data-kinde-widget] input[type="password"]:focus {
+            outline: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
           }
           
-          /* Phone input focus - no border change */
-          input[type="tel"]:focus {
-            border: none;
+          /* Remove Kinde wrapper borders around inputs */
+          [data-kinde-widget] [class*="input-wrapper"],
+          [data-kinde-widget] [class*="field-input"],
+          [data-kinde-widget] [class*="form-input"],
+          [data-kinde-widget] [data-kinde-field-input] {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
           }
           
           /* Hide labels for phone inputs */
@@ -369,30 +353,30 @@ const MoxiiLayout = async ({request, context}) => {
                 }
               });
             }
+
+            // Kinde wraps inputs with its own containers; flatten those styles
+            // so the field renders like the Flutter screens.
+            const flattenInputWrappers = () => {
+              const inputs = document.querySelectorAll(
+                'input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[inputmode="numeric"]'
+              );
+              inputs.forEach((input) => {
+                let node = input.parentElement;
+                for (let i = 0; i < 4 && node; i += 1) {
+                  node.style.border = 'none';
+                  node.style.background = 'transparent';
+                  node.style.boxShadow = 'none';
+                  node.style.padding = '0';
+                  node = node.parentElement;
+                }
+              });
+            };
+            flattenInputWrappers();
           });
         `}</script>
       </head>
       <body>
         <div className="moxii-container">
-          <div className="moxii-header">
-            <button 
-              className="moxii-back-button" 
-              type="button"
-              onclick="window.history.back()"
-              aria-label="Go back"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path 
-                  d="M12.5 15L7.5 10L12.5 5" 
-                  stroke="#A64BFF" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-          
           <div className="moxii-content">
             <h1 className="moxii-title">{context.widget.content.heading}</h1>
             {context.widget.content.description && (
