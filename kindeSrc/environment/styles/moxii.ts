@@ -412,6 +412,8 @@ export const moxiiOtpStyles = `
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
+    /* Reserve room for fixed bottom stack (button + resend + branding). */
+    padding-bottom: 190px;
   }
 
   /* Ensure Kinde widget root can distribute top fields and bottom actions */

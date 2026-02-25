@@ -72,6 +72,56 @@ export const moxiiOtpScript = `
       }
     };
 
+    const getKeyboardInset = () => {
+      if (!window.visualViewport) return 0;
+      return Math.max(
+        0,
+        Math.round(window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop)
+      );
+    };
+
+    const setPinnedStyle = (el, bottomPx, zIndex, centeredText) => {
+      if (!el) return;
+      el.style.position = 'fixed';
+      el.style.left = '50%';
+      el.style.transform = 'translateX(-50%)';
+      el.style.width = 'min(calc(100vw - 2.5rem), 27.5rem)';
+      el.style.maxWidth = '27.5rem';
+      el.style.bottom = bottomPx + 'px';
+      el.style.zIndex = String(zIndex);
+      if (centeredText) {
+        el.style.textAlign = 'center';
+      }
+    };
+
+    const pinBottomStack = () => {
+      const keyboardInset = getKeyboardInset();
+      const widget = document.querySelector('.moxii-widget');
+      if (widget) {
+        widget.style.paddingBottom = (190 + keyboardInset) + 'px';
+      }
+
+      const submitButtons = document.querySelectorAll(
+        'button[type="submit"], button[data-kinde-submit], .kinde-button-primary'
+      );
+
+      submitButtons.forEach((button) => {
+        setPinnedStyle(button, 124 + keyboardInset, 40, false);
+      });
+
+      const fallbackActions = document.querySelectorAll(
+        '[data-kinde-fallback-action], [class*="fallback-action"]'
+      );
+      fallbackActions.forEach((el) => {
+        setPinnedStyle(el, 64 + keyboardInset, 30, true);
+      });
+
+      const brandings = document.querySelectorAll('[data-kinde-branding], [class*="branding"]');
+      brandings.forEach((el) => {
+        setPinnedStyle(el, 20 + keyboardInset, 20, true);
+      });
+    };
+
     const getOtpInputs = () =>
       Array.from(
         document.querySelectorAll('input[inputmode="numeric"], input[data-kinde-otp-input]')
@@ -188,6 +238,7 @@ export const moxiiOtpScript = `
       enhanceOtpInputs();
       flattenInputWrappers();
       pinSubmitToBottom();
+      pinBottomStack();
     };
 
     const wireResendButtons = () => {
@@ -222,5 +273,9 @@ export const moxiiOtpScript = `
 
     setTimeout(() => observer.disconnect(), 5000);
     window.addEventListener('resize', applyWidgetFixes);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', applyWidgetFixes);
+      window.visualViewport.addEventListener('scroll', applyWidgetFixes);
+    }
   });
 `;
