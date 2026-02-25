@@ -65,6 +65,29 @@ const MoxiiLoginPage = async ({request, context}) => {
             --moxii-link: #2F7CF6;
             --moxii-white: #FFFFFF;
             --moxii-flag-red: #CF142B;
+
+            /* Kinde settings overrides (preferred customization path) */
+            --kinde-base-background-color: var(--moxii-canvas);
+            --kinde-base-color: var(--moxii-ink);
+            --kinde-base-font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+            --kinde-base-focus-outline-width: 0;
+            --kinde-base-focus-outline-style: none;
+            --kinde-base-focus-outline-color: transparent;
+            --kinde-base-focus-outline-offset: 0;
+            --kinde-button-primary-background-color: var(--moxii-primary);
+            --kinde-button-primary-color: var(--moxii-white);
+            --kinde-button-border-radius: 1.5rem;
+            --kinde-button-primary-border-radius: 1.5rem;
+            --kinde-shared-color-invalid: var(--moxii-flag-red);
+            --kinde-control-associated-text-invalid-message-color: var(--moxii-flag-red);
+            --kinde-control-select-text-background-color: transparent;
+            --kinde-control-select-text-border-width: 0;
+            --kinde-control-select-text-border-style: solid;
+            --kinde-control-select-text-border-color: transparent;
+            --kinde-control-select-text-border-radius: 0;
+            --kinde-control-select-text-color: var(--moxii-ink);
+            --kinde-control-select-text-font-size: 1.5rem;
+            --kinde-control-select-text-font-weight: 500;
           }
           
           * {
