@@ -94,31 +94,49 @@ export const moxiiOtpScript = `
       }
     };
 
+    const findPrimaryActionElement = () => {
+      const direct =
+        document.querySelector('button[type="submit"]') ||
+        document.querySelector('button[data-kinde-submit]') ||
+        document.querySelector('.kinde-button-primary');
+      if (direct) return direct;
+
+      const candidates = Array.from(
+        document.querySelectorAll('button, a[role="button"], [role="button"]')
+      );
+      return (
+        candidates.find((el) => /continue|next|submit|verify/i.test((el.textContent || '').trim())) ||
+        null
+      );
+    };
+
     const pinBottomStack = () => {
       const keyboardInset = getKeyboardInset();
       const widget = document.querySelector('.moxii-widget');
       if (widget) {
-        widget.style.paddingBottom = (190 + keyboardInset) + 'px';
+        widget.style.paddingBottom = (210 + keyboardInset) + 'px';
       }
 
-      const submitButtons = document.querySelectorAll(
-        'button[type="submit"], button[data-kinde-submit], .kinde-button-primary'
-      );
-
-      submitButtons.forEach((button) => {
-        setPinnedStyle(button, 124 + keyboardInset, 40, false);
-      });
+      const primaryAction = findPrimaryActionElement();
+      if (primaryAction) {
+        // Pin the action wrapper when available to avoid Kinde internal layout clashes.
+        const actionWrapper =
+          primaryAction.closest('[class*="footer"], [class*="actions"], [data-kinde-footer], [data-kinde-actions]') ||
+          primaryAction;
+        setPinnedStyle(actionWrapper, 138 + keyboardInset, 40, false);
+        actionWrapper.style.display = 'block';
+      }
 
       const fallbackActions = document.querySelectorAll(
         '[data-kinde-fallback-action], [class*="fallback-action"]'
       );
       fallbackActions.forEach((el) => {
-        setPinnedStyle(el, 64 + keyboardInset, 30, true);
+        setPinnedStyle(el, 72 + keyboardInset, 30, true);
       });
 
       const brandings = document.querySelectorAll('[data-kinde-branding], [class*="branding"]');
       brandings.forEach((el) => {
-        setPinnedStyle(el, 20 + keyboardInset, 20, true);
+        setPinnedStyle(el, 22 + keyboardInset, 20, true);
       });
     };
 
