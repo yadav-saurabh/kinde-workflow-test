@@ -187,7 +187,7 @@ export default async function (event: onPostAuthenticationEvent) {
   }
 
   const userId = event.context.user.id;
-  const orgCode = (event.request as any).authUrlParams?.orgCode;
+  const orgCode = event.request.authUrlParams?.orgCode;
   const application = event.context.application;
   const clientId = application?.clientId || "";
 
