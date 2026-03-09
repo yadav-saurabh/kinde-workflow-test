@@ -180,14 +180,14 @@ async function createCustomerUser(
 }
 
 export default async function (event: onPostAuthenticationEvent) {
-  const isNewKindeUser = event.context.auth.isNewUserRecordCreated;
-
-  if (!isNewKindeUser) {
-    return;
-  }
+  // NOTE: We intentionally do NOT gate on isNewUserRecordCreated.
+  // A Kinde user may already exist (e.g. created as staff) but be logging
+  // into a different app (e.g. customer app) for the first time. The backend
+  // post-auth endpoints are idempotent — they skip creation if the user
+  // already exists in that service's database.
 
   const userId = event.context.user.id;
-  const orgCode = (event.request as any).authUrlParams?.orgCode;
+  const orgCode = event.request.authUrlParams?.orgCode;
   const application = event.context.application;
   const clientId = application?.clientId || "";
 
