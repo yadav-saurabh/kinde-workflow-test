@@ -180,12 +180,6 @@ async function createCustomerUser(
 }
 
 export default async function (event: onPostAuthenticationEvent) {
-  const isNewKindeUser = event.context.auth.isNewUserRecordCreated;
-
-  if (!isNewKindeUser) {
-    return;
-  }
-
   const userId = event.context.user.id;
   const orgCode = event.request.authUrlParams?.orgCode;
   const application = event.context.application;
