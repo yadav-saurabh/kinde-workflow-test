@@ -143,13 +143,17 @@ type Payload = {
 
 async function createStaffUser(
   apiBaseUrl: string,
+  workflowApiKey: string,
   payload: Payload,
 ): Promise<void> {
   const response = await fetch<{ error?: string }>(
     `${apiBaseUrl}/entities/auth/post-authentication`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Workflow-Key": workflowApiKey,
+      },
       body: payload as unknown as URLSearchParams,
       responseFormat: "json",
     },
@@ -162,13 +166,17 @@ async function createStaffUser(
 
 async function createCustomerUser(
   apiBaseUrl: string,
+  workflowApiKey: string,
   payload: Payload,
 ): Promise<void> {
   const response = await fetch<{ error?: string }>(
     `${apiBaseUrl}/customers/auth/post-authentication`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Workflow-Key": workflowApiKey,
+      },
       body: payload as unknown as URLSearchParams,
       responseFormat: "json",
     },
@@ -209,8 +217,13 @@ export default async function (event: onPostAuthenticationEvent) {
   const appName = await getAppNameFromKinde(event, clientId);
 
   const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
+  const workflowApiKey =
+    getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
   if (!apiBaseUrl) {
     throw new Error("Missing API configuration");
+  }
+  if (!workflowApiKey) {
+    throw new Error("Missing MOXII_KINDE_WORKFLOW_API_KEY configuration");
   }
 
   const userType = determineUserType(appName);
@@ -225,9 +238,9 @@ export default async function (event: onPostAuthenticationEvent) {
   };
 
   if (userType === "STAFF") {
-    await createStaffUser(apiBaseUrl, payload);
+    await createStaffUser(apiBaseUrl, workflowApiKey, payload);
   } else if (userType === "CUSTOMER") {
-    await createCustomerUser(apiBaseUrl, payload);
+    await createCustomerUser(apiBaseUrl, workflowApiKey, payload);
   } else {
     throw new Error(
       `Unknown user type for app: ${appName}. Configure application property kp_app_name to 'staff' or 'customer'.`,

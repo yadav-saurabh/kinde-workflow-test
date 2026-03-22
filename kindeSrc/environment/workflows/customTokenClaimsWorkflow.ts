@@ -112,7 +112,11 @@ type ClaimsPayload = {
   orgExternalId?: string;
 };
 
-async function getStaffClaims(apiBaseUrl: string, payload: ClaimsPayload) {
+async function getStaffClaims(
+  apiBaseUrl: string,
+  workflowApiKey: string,
+  payload: ClaimsPayload,
+) {
   const response = await fetch<{
     userId: string;
     userType: string;
@@ -127,7 +131,10 @@ async function getStaffClaims(apiBaseUrl: string, payload: ClaimsPayload) {
     message?: string;
   }>(`${apiBaseUrl}/entities/auth/claims`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Workflow-Key": workflowApiKey,
+    },
     body: payload as unknown as URLSearchParams,
     responseFormat: "json",
   });
@@ -159,6 +166,7 @@ async function getStaffClaims(apiBaseUrl: string, payload: ClaimsPayload) {
 
 async function getCustomerClaims(
   apiBaseUrl: string,
+  workflowApiKey: string,
   payload: ClaimsPayload,
 ) {
   const response = await fetch<{
@@ -174,7 +182,10 @@ async function getCustomerClaims(
     message?: string;
   }>(`${apiBaseUrl}/customers/auth/claims`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Workflow-Key": workflowApiKey,
+    },
     body: payload as unknown as URLSearchParams,
     responseFormat: "json",
   });
@@ -218,8 +229,13 @@ export default async function (event: onUserTokenGeneratedEvent) {
   }
 
   const apiBaseUrl = getEnvironmentVariable("MOXII_API_BASE_URL").value;
+  const workflowApiKey =
+    getEnvironmentVariable("MOXII_KINDE_WORKFLOW_API_KEY").value;
   if (!apiBaseUrl) {
     throw new Error("Missing API configuration");
+  }
+  if (!workflowApiKey) {
+    throw new Error("Missing MOXII_KINDE_WORKFLOW_API_KEY configuration");
   }
 
   let claims;
@@ -227,9 +243,9 @@ export default async function (event: onUserTokenGeneratedEvent) {
   const payload: ClaimsPayload = { kindeUserId: userId, orgCode, orgExternalId };
 
   if (userType === "STAFF") {
-    claims = await getStaffClaims(apiBaseUrl, payload);
+    claims = await getStaffClaims(apiBaseUrl, workflowApiKey, payload);
   } else if (userType === "CUSTOMER") {
-    claims = await getCustomerClaims(apiBaseUrl, payload);
+    claims = await getCustomerClaims(apiBaseUrl, workflowApiKey, payload);
   } else {
     throw new Error(
       `Unknown user type for app: ${appName}. Configure application property kp_app_name to 'staff' or 'customer'.`,
